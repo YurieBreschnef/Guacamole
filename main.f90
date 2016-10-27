@@ -25,7 +25,7 @@ program guacamole
 
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
   !do main_stp= 0,steps
-  do while (state_t <tmax)
+  do while (state%t <tmax)
     !if(benchmarking ==1) call cpu_time(bm_step_starttime)
     if(benchmarking ==1) bm_step_starttime=  omp_get_wtime()
 
@@ -76,17 +76,11 @@ program guacamole
     ! TIMESTEPPING ---------------------------------------------------------------------------
     !if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
     if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
-      !call RK4_adjust_dt()
-      !call RK4_step()
-    if(state%t < 30.0_rp) then
-      dt = 1.0e-2
-    end if 
-    if(state%t > 30.0_rp) then
-      dt = 1.0e-3
-    end if 
-      call euler_step()
-      !call div_tester()
-      !call ETD2_step()
+    !call RK4_adjust_dt()
+    !call RK4_step()
+    !call euler_step()
+    !call div_tester()
+    call ETD2_step()
     main_stp = main_stp +1
     !if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
     if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()

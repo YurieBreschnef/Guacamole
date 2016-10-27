@@ -58,7 +58,7 @@ module IO_mod
     state%s_dummy_f%val(:,:) =( state%ikx_bar%val(:,:)*state%u_f%val(:,:,2) &
                              -state%iky_bar%val(:,:)*state%u_f%val(:,:,1))
 
-    call transform(state%s_dummy_f%val,state%s_dummy%val,-1,shearing,state%t)
+    call transform(state%s_dummy_f%val,state%s_dummy%val,-1,shearing,sheartime)
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_vort!'
 		  do i=0,xdim-1
@@ -266,7 +266,11 @@ module IO_mod
 			end do
 		end do
 		do k=0,bins-1
-	  			write(20,*) k,real(k,rp)*dk, real((bin(k)/bin_area(k)),real_outp_precision)
+	  			write(20,*) k,&
+                      real(k,rp)*dk,&
+                      real((bin(k)/bin_area(k)),real_outp_precision),&
+                      log(real((bin(k)/bin_area(k)),real_outp_precision))
+
 		end do
     close(20)
   end subroutine

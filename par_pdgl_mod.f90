@@ -29,8 +29,10 @@ function fu(u_f,temp_f,chem_f,t)
   fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
-  !fu(:,:,1) = dealiase_field(fu(:,:,1))
-  !fu(:,:,2) = dealiase_field(fu(:,:,2))
+  fu(0,0,:) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
+
+  fu(:,:,1) = dealiase_field(fu(:,:,1))
+  fu(:,:,2) = dealiase_field(fu(:,:,2))
   !if(benchmarking ==1) call cpu_time(bm_fu_endtime)
   if(benchmarking ==1) bm_fu_endtime=  omp_get_wtime()
 end function 
@@ -75,8 +77,9 @@ function fu_N(u_f,temp_f,chem_f,t)
     fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
   end if
 
-  !fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
-  !fu_N(:,:,2) = dealiase_field(fu_N(:,:,2))
+  fu_N(0,0,:) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
+  fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
+  fu_N(:,:,2) = dealiase_field(fu_N(:,:,2))
 
   IF(ALL((real(fu_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fu_N does not contribute to pdgl!'
 end function 
@@ -92,7 +95,7 @@ function fu_shear(u_f,t)
   if(shearing ==1) then
     do i=0,xdim-1
       do j=0,ydim-1
-          if (.NOT.(i==0.AND.j==0)) then
+          if (.NOT.((i==0).AND.(j==0))) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
              fu_shear(i,j,1) = fu_shear(i,j,1)+2.0_rp*((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
@@ -100,6 +103,9 @@ function fu_shear(u_f,t)
              fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
+          else
+             fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
+             fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
           end if
       end do
     end do
@@ -140,7 +146,7 @@ function fu_buo(u_f,temp_f,chem_f,t)
   !$omp do
   do j=0,ydim-1
     do i=0,xdim-1
-        if (.NOT.(i==0.AND.j==0)) then
+        if (.NOT.((i==0).AND.(j==0))) then
           !TEMPERATURE PART
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
               (-state%ikx_bar%val(i,j)*(state%iky_bar%val(i,j)*temp_f(i,j)))/state%iki_bar_sqr%val(i,j)
@@ -156,6 +162,10 @@ function fu_buo(u_f,temp_f,chem_f,t)
 
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
           !note the minus signs within ik- variables
+          ! minus signs equalise above and below fraction (ik*ik)/ik^2
+          else
+            fu_buo(i,j,2) =  B_therm*temp_f(i,j)
+            fu_buo(i,j,2) = -B_comp*chem_f(i,j)
         end if
     end do
   end do
@@ -222,7 +232,7 @@ function fu_Nuk(u_f,t)
   !$omp do
   do j=0,ydim-1 
     do i=0,xdim-1 
-        if (.NOT.(i==0.AND.j==0)) then
+        if (.NOT.((i==0).AND.(j==0))) then
           IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
             fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
                               *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
@@ -233,13 +243,18 @@ function fu_Nuk(u_f,t)
             write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
             stop
           end if
+        else 
+          fu_Nuk(i,j,1) =Nuk_f(i,j,1)
+          fu_Nuk(i,j,2) =Nuk_f(i,j,2)
         end if
     end do
   end do
   !$omp end do
   !$omp end parallel
 
-
+  !dealiase
+  fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
+  fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
   !IF(ANY(IsNaN(real(fu_Nuk))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
   !  stop
@@ -263,7 +278,10 @@ function ft(u_f,temp_f,t)
   ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
   ft = ft + ft_diff(temp_f)           !DIFFUSION
   ft = ft + ft_strat(u_f,temp_f)      !BACKGROUND STRATIFICATION
-  !ft = dealiase_field(ft)
+
+  ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
+
+  ft = dealiase_field(ft)
   !IF(ALL(ft ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func ft(): all output values are zero! '
   !  !stop
@@ -309,6 +327,7 @@ function ft_N(u_f,temp_f,t)
   ft_N = cmplx(0.0,0.0,rp)
   ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
   ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  ft_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
   !ft_N = dealiase_field(ft_N)
   IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
 end function 
@@ -389,7 +408,9 @@ function fc(u_f,chem_f,t)
   fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
   fc = fc + fc_diff(chem_f)           !DIFFUSION
   fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
-  !fc = dealiase_field(fc)
+  fc = dealiase_field(fc)
+
+  fc(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
   !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func fc(): all output values are zero! '
   !  !stop
@@ -435,6 +456,7 @@ function fc_N(u_f,chem_f,t)
   fc_N = cmplx(0.0,0.0,rp)
   fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
   fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
+  fc_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
   !fc_N = dealiase_field(fc_N)
   IF(ALL((real(fc_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fc_N does not contribute to pdgl!'
 end function 

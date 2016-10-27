@@ -52,7 +52,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_therm,'|dt:',dt
@@ -62,7 +62,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_comp,'|dt:',dt
@@ -72,7 +72,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_comp,'|dt:',dt
@@ -82,7 +82,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_visc,'|dt:',dt
@@ -92,7 +92,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_visc,'|dt:',dt
@@ -101,7 +101,7 @@ module init
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
-      stop
+      !stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     write(*,*) 'smallest possible number:', epsilon(1.0_rp)
@@ -125,12 +125,27 @@ module init
       write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
             mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
     end if
+    !----------------------------------------------------------------------------------------
     call cpu_time(bm_timestepping_starttime)
     call euler_step()
     call cpu_time(bm_timestepping_endtime)
     call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
     write(*,*) '______________________________________________________'
     write(*,*) 'EULER step took:', bm_timestepping_time
+    if(int(bm_step_time*real(steps))>=3600) then
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
+                            int(3600))/60,'min'
+    else
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
+            mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
+    end if
+    !----------------------------------------------------------------------------------------
+    call cpu_time(bm_timestepping_starttime)
+    call ETD2_step()
+    call cpu_time(bm_timestepping_endtime)
+    call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
+    write(*,*) '______________________________________________________'
+    write(*,*) 'ETD2_step step took:', bm_timestepping_time
     if(int(bm_step_time*real(steps))>=3600) then
       write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
                             int(3600))/60,'min'
@@ -215,8 +230,8 @@ module init
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 16 
-    ypoints = 16
+    xpoints = xdim/8
+    ypoints = ydim/8
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = rand()
@@ -229,12 +244,13 @@ module init
               !state%temp_f%val(i,j) = cmplx(1.0_rp,1.0_rp,rp) 
               !-----------------------------------------------------------------------
 
-              !state%temp%val(i,j) = state%temp%val(i,j) &
-              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              state%temp%val(i,j) = state%temp%val(i,j) &
+              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
-              amp = (rand()-0.5_rp)
-              state%temp%val(i,j) = amp
+              !amp = (rand()-0.5_rp)
+              !state%temp%val(i,j) = amp
+
               !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
               !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
               !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
@@ -254,7 +270,7 @@ module init
         end do
       end do
     end do
-    state%temp%val = state%temp%val*0.10_rp
+    state%temp%val = state%temp%val*0.80_rp
 
     state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -273,19 +289,20 @@ module init
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 16 
-    ypoints = 16
+    xpoints = xdim/9 
+    ypoints = ydim/7 
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = (rand())
         do i=0,xdim-1
           do j=0,ydim-1
-!              state%chem%val(i,j) = state%chem%val(i,j) &
-!              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-!                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-!
-              amp = (rand()-0.5_rp)
-              state%chem%val(i,j) = amp
+              state%chem%val(i,j) = state%chem%val(i,j) &
+              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+
+              !amp = (rand()-0.5_rp)
+              !state%chem%val(i,j) = amp
+
               !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi) 
               !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
               !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
@@ -305,7 +322,7 @@ module init
         end do
       end do
     end do
-    state%chem%val = state%chem%val * 0.1000_rp
+    state%chem%val = state%chem%val * 0.5000_rp
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM

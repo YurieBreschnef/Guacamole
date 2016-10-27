@@ -12,8 +12,8 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 128 
-	integer(kind=ip),parameter		:: ydim	        = 128   
+	integer(kind=ip),parameter		:: xdim	        = 256 
+	integer(kind=ip),parameter		:: ydim	        = 256   
 
 	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 200 ! maximum no of output files per type
@@ -22,8 +22,8 @@ module const
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 4.0_rp *pi !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 4.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 2.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 2.0_rp *pi !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -32,7 +32,7 @@ module const
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter     :: tmax                      = 50.0_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
+	real(kind = rp)					      :: dt 	                     = 5.0e-4_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -50,7 +50,7 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 0.01_rp
+	real(kind = rp)               :: shear    = 0.05_rp
   integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
@@ -76,12 +76,13 @@ module const
 
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.07_rp 
-	real(kind = rp),parameter			:: D_therm  = 0.010_rp
-	real(kind = rp),parameter			:: D_comp   = 0.0020_rp
-	real(kind = rp),parameter			:: B_therm  = 2.4_rp
+	real(kind = rp),parameter     :: D_visc   = 0.035_rp 
+	real(kind = rp),parameter			:: D_therm  = 0.0050_rp
+	real(kind = rp),parameter			:: D_comp   = 0.0001_rp
+
+	real(kind = rp),parameter			:: B_therm  = 0.12_rp
 	real(kind = rp),parameter			:: B_comp   = 1.0_rp
 	real(kind = rp),parameter			:: S_therm  = 1.0_rp  
-	real(kind = rp),parameter			:: S_comp   = 2.0_rp 
+	real(kind = rp),parameter			:: S_comp   = 0.1_rp 
 
 end module
