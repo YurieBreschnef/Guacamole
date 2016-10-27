@@ -26,7 +26,7 @@ function fu(u_f,temp_f,chem_f,t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
   fu(0,0,:) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
@@ -252,8 +252,8 @@ function fu_Nuk(u_f,t)
   !$omp end parallel
 
   !dealiase
-  !fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
-  !fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
+  fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
+  fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
   !IF(ANY(IsNaN(real(fu_Nuk))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
   !  stop
@@ -280,7 +280,7 @@ function ft(u_f,temp_f,t)
 
   ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
 
-  !ft = dealiase_field(ft)
+  ft = dealiase_field(ft)
   !IF(ALL(ft ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func ft(): all output values are zero! '
   !  !stop

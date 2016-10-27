@@ -55,8 +55,8 @@ module IO_mod
 		filename = trim(filename)
 
     !calc vorticity in fourier space
-    state%s_dummy_f%val(:,:) =( state%ikx%val(:,:)*state%u_f%val(:,:,2) &
-                             -state%iky%val(:,:)*state%u_f%val(:,:,1))
+    state%s_dummy_f%val(:,:) =( state%ikx_bar%val(:,:)*state%u_f%val(:,:,2) &
+                             -state%iky_bar%val(:,:)*state%u_f%val(:,:,1))
 
     call transform(state%s_dummy_f%val,state%s_dummy%val,-1,shearing,state%t)
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 

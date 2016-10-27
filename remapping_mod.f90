@@ -10,6 +10,8 @@ subroutine remap_stepwise()
   call set_ik_bar(sheartime)
   state%u_f%val(:,:,1) = remap_brucker(state%u_f%val(:,:,1))
   state%u_f%val(:,:,2) = remap_brucker(state%u_f%val(:,:,2))
+  state%temp_f%val(:,:) = remap_brucker(state%temp_f%val(:,:))
+  state%chem_f%val(:,:) = remap_brucker(state%chem_f%val(:,:))
 
   if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
     sheartime = -T_rm/2.0_rp

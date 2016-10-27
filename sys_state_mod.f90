@@ -106,7 +106,7 @@ contains
     Epot= 0.0_rp
     do i=0,xdim-1
     do j=0,ydim-1
-      Epot= Epot+abs(real((B_therm*state%temp%val(i,j) - B_comp*state%chem%val(i,j)),rp))
+      Epot= Epot+abs(real((B_therm*state%temp%val(i,j) - B_comp*state%chem%val(i,j)),rp))*(real(j,rp)/real(ydim,rp)*Ly)
     end do
     end do
     measure_Epot = real(Epot,real_outp_precision)/real(xdim*ydim,real_outp_precision)

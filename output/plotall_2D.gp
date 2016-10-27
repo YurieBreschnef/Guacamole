@@ -3,10 +3,10 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 8.0*3.14159 
-Ly = 8.0*3.14159  
-xdim = 512
-ydim = 512
+Lx = 4.0*3.14159 
+Ly = 4.0*3.14159  
+xdim = 128 
+ydim = 128 
 #Lx = 8 
 #Ly = 8  
 
@@ -42,18 +42,17 @@ no_of_img = 299
     #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem"   
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
-    set multiplot layout 3,2
+    set multiplot layout 4,2
    #set xrange [0.0:4.0]
 
-        #set title 'simulation time vs.Temperature measures [arb]'
-        #plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
-        #     './data/T_stat/T_stat.dat' using 2:4 title "mean temp" , \
-        #     './data/T_stat/T_stat.dat' using 2:5 title "min temp"   
-        #set title 'simulation time vs. Chemical field measures [arb]'
-        #plot './data/C_stat/C_stat.dat' using 2:3 title "max Chem"  , \
-        #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem" , \
-        #     './data/C_stat/C_stat.dat' using 2:5 title "min Chem"   
-
+        set title 'simulation time vs.Temperature measures [arb]'
+        plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
+             './data/T_stat/T_stat.dat' using 2:4 title "mean temp" , \
+             './data/T_stat/T_stat.dat' using 2:5 title "min temp"   
+        set title 'simulation time vs. Chemical field measures [arb]'
+        plot './data/C_stat/C_stat.dat' using 2:3 title "max Chem"  , \
+             './data/C_stat/C_stat.dat' using 2:4 title "mean Chem" , \
+             './data/C_stat/C_stat.dat' using 2:5 title "min Chem"   
 
         set title 'simulation [arb] time vs. velocities (all directions) [arb]'
         plot './data/u_stat/u_stat.dat' using 2:3 title "v_{max}"   ,\
@@ -139,7 +138,7 @@ do for [i=0:no_of_img] {
     # Multiplot for better visibility:-----------------------------------
     
     set size ratio aspect_ratio 
-    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1600,800 enhanced font 'Verdana,10'
     set output './visual/combo/'.i.'.png'
 
 		set multiplot layout 2,4
