@@ -1,7 +1,8 @@
 program guacamole 
-  !main program part, the main timestepping loop is implemented here, calling the actual
-  !stepping routines in the timestepping_mod, and writing to files by calling write_all()
-  !from IO_module.
+  ! main program part, the main timestepping loop is implemented here, calling the actual
+  ! stepping routines in the timestepping_mod, and writing to files by calling write_all()
+  ! from IO_module.
+  ! periodic measures are taken according to parameter: measure_every in const_mod
 
   !use omp_lib
   use iso_c_binding
@@ -16,82 +17,55 @@ program guacamole
   use benchmark
   implicit none
   if(debuglevel .GE. 1) write(*,*) '__________________START____________________________________'
-
   call init_all()
   call test_all()
-  ! write initial state to file (name: 0.type.dat)
-  call write_all()
-   last_written = last_written+write_intervall
-
+  call write_all()      ! write initial conditions to file
+  last_written = last_written+write_intervall
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
   !do main_stp= 0,steps
   do while (state%t <tmax)
-    !if(benchmarking ==1) call cpu_time(bm_step_starttime)
-    if(benchmarking ==1) bm_step_starttime=  omp_get_wtime()
-
     ! STATISTICS WRITING----------------------------------------------------------------------
-    !if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
+    if(benchmarking ==1) bm_step_starttime=  omp_get_wtime()
     if(benchmarking ==1) bm_statwrite_starttime=  omp_get_wtime()
-      if(mod(state%step,(measure_every)).EQ.0) then
-        call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
-        call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
-        call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
-        call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
-        call write_u_stat()
-        call write_E_stat()
-        call write_T_stat()
-        call write_C_stat()
-        call write_sys_stat()
-      end if 
-    !if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
+    if(mod(state%step,(measure_every)).EQ.0) then
+      call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
+      call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
+      call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
+      call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
+      call write_u_stat()
+      call write_E_stat()
+      call write_T_stat()
+      call write_C_stat()
+      call write_sys_stat()
+    end if 
     if(benchmarking ==1) bm_statwrite_endtime=  omp_get_wtime()
-    ! ----------------------------------------------------------------------------------------
-
-
     ! FILE WRITING----------------------------------------------------------------------------
-    !if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
     if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
-    !if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
     if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
-      if(state%t > last_written) then
-        !if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
-        if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
-        call write_all()
-        !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
-        last_written = last_written+write_intervall
-        !if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
-        if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
-      end if 
-    ! ----------------------------------------------------------------------------------------
-
+    if(state%t > last_written) then
+      if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
+      call write_all()
+      last_written = last_written+write_intervall
+      if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
+    end if 
     ! CONSOLE OUTPUT----------------------------------------------------------------------------
-  	if(mod(state%step,(steps/1000)).EQ.0) then
+  	if((steps>=1000).AND.(mod(state%step,(steps/1000)).EQ.0)) then
         write(*,*) (state%step/(steps/1000)) ,'permille|step:',main_stp, &
     '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'T_rm',T_rm
-    !    call div_tester()
     end if
-    ! ----------------------------------------------------------------------------------------
-
-
     ! TIMESTEPPING ---------------------------------------------------------------------------
-    !if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
     if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
     !call RK4_adjust_dt()
-    !call RK4_step()
+    call RK4_step()
     !call euler_step()
     !call div_tester()
-    call ETD2_step()
+    !call ETD2_step()
     main_stp = main_stp +1
-    !if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
     if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()
     ! ----------------------------------------------------------------------------------------
-    !if(benchmarking ==1) call cpu_time(bm_step_endtime)
     if(benchmarking ==1) bm_step_endtime=  omp_get_wtime()
-
     !BENCHMARKING------------------------------------
-  	!if(mod(state%step-1,(steps/1000)).EQ.0) then
     if(benchmarking ==1) call bm_evaluate(.true.)
-    !end if
   end do
 
   if(debuglevel <= 1) write(*,*) '__________________END OF TIMESTEPPING______________________'

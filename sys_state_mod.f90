@@ -35,18 +35,14 @@ module sys_state
     type(sfield)                      :: temp
     type(sfield)                      :: temp_f
     type(sfield)                      :: t_k1,t_k2,t_k3,t_k4	
+
     type(sfield)                      :: chem  
     type(sfield)                      :: chem_f
+    type(sfield)                      :: c_k1,c_k2,c_k3,c_k4
 
     type(sfield)                      :: s_dummy
     type(sfield)                      :: s_dummy_f
 
-    type(sfield)                      :: c_dummy_f
-    type(sfield)                      :: cz_dummy_f
-
-    type(sfield)                      :: t_dummy_f
-    type(sfield)                      :: tz_dummy_f
-    type(sfield)                      :: c_k1,c_k2,c_k3,c_k4
 
   	type(kfield)                      :: ikx,iky! k's for deriv
   	type(kfield)                      :: ikx_sqr,iky_sqr! k's for deriv
@@ -63,8 +59,6 @@ module sys_state
   !MAIN STATE VARIABLE:
   type(system_state)                                          ::state_np1 !state n+1
   type(system_state)                                          ::state
-  type(system_state)                                          ::state_nm1 !state n-1
-
 
 contains
 

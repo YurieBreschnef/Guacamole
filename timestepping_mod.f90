@@ -1,5 +1,6 @@
 module timestepping
-  !implements time-stepping scemes that are called by e.g. 'call RK4_step()','call euler_step()'
+  ! implements time-stepping scemes that are called by e.g. 'call RK4_step()','call euler_step()'
+  ! remapping is called stepwise, so all related operations go there
   use sys_state
   use pdgl
   use plans
@@ -12,31 +13,16 @@ subroutine reset_dt(new_dt)
   real(kind = rp)               :: new_dt
   dt      = new_dt
   dt_2    = dt*(1.0_rp/ 2.0_rp)           
-  dt_3    = dt*(1.0_rp/ 3.0_rp)       
-  dt_4    = dt*(1.0_rp/ 4.0_rp)       
-  dt_8    = dt*(1.0_rp/ 8.0_rp)       
-  dt_34   = dt*(3.0_rp/ 4.0_rp)       
-  dt_29   = dt*(2.0_rp/ 9.0_rp)       
-  dt_49   = dt*(4.0_rp/ 9.0_rp)       
-  dt_724  = dt*(7.0_rp/24.0_rp)         
-end subroutine
-
-subroutine RK4_adjust_dt()
-!primitive timestep adjustment
-  dt=0.05_rp/measure_vmax()
-  if(dt > dt_max) then
-      call reset_dt(dt_max)
-  end if
-  if(dt < dt_min) then
-      call reset_dt(dt_min)
-  end if
 end subroutine
 !------------------------------------------------------------------------------------------
 subroutine RK4_step()
-	!performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
+	! performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
 
+  !___________ REMAPPING_____________________
+  if(remapping==1 .AND.shearing==1.) then
+    call remap_stepwise()
+  end if
 
-  if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   !_____________________k1_________________________________
   call set_ik_bar(sheartime) 
 	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
@@ -95,15 +81,10 @@ subroutine RK4_step()
                                                     +2.0_rp*state%c_k2%val&
                                                     +2.0_rp*state%c_k3%val&
                                                            +state%c_k4%val)
+  call dealiase_all()
+
 	sheartime = sheartime+dt
 	state%t=state%t+dt
-
-  call dealiase_all()
-  ! REMAPPING
-  if(remapping==1 .AND.shearing==1.) then
-    call remap_stepwise()
-  end if
-  call dealiase_all()
 	state%step=state%step+1
 end subroutine
 !------------------------------------------------------------------------------------------
@@ -134,7 +115,7 @@ end subroutine
 !------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
 subroutine ETD2_step()
-! perfomrs Integrating factor technique as in Brucker2007 (2nd order estimation of integral)
+  ! perfomrs Integrating factor technique as in Brucker2007 (2nd order estimation of integral)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_q
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_n
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_np1
@@ -156,7 +137,6 @@ subroutine ETD2_step()
     call remap_stepwise()
   end if
   
-  call set_ik_bar(sheartime)
   ! set q-values for exponent, note the minus sign in iki_sqr
   u_q(:,:,1) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
   u_q(:,:,2) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
@@ -167,12 +147,13 @@ subroutine ETD2_step()
   u_exp_qh = real(exp(u_q*dt),rp)
   t_exp_qh = real(exp(t_q*dt),rp)
   c_exp_qh = real(exp(c_q*dt),rp)
+
   ! with minus in exponent for timestep
   u_exp_mqh = real(exp(-u_q*dt),rp)
   t_exp_mqh = real(exp(-t_q*dt),rp)
   c_exp_mqh = real(exp(-c_q*dt),rp)
 
-  ! calc  RHS_n and RHS_n (read as n plus one)
+  ! calc  RHS_n and RHS_np1 (read as n plus one)
   u_RHS_n   = fu_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh,state%chem_f%val*c_exp_qh,sheartime)
   t_RHS_n   = ft_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh                          ,sheartime)
   c_RHS_n   = fc_N(state%u_f%val*u_exp_qh                          ,state%chem_f%val*c_exp_qh,sheartime)
@@ -191,8 +172,9 @@ subroutine ETD2_step()
   state%u_f%val   =state%u_f%val    *u_exp_mqh + dt_2*(u_RHS_n*u_exp_mqh + u_RHS_np1)
   state%temp_f%val=state%temp_f%val *t_exp_mqh + dt_2*(t_RHS_n*t_exp_mqh + t_RHS_np1)
   state%chem_f%val=state%chem_f%val *c_exp_mqh + dt_2*(c_RHS_n*c_exp_mqh + c_RHS_np1)
-
+  call dealiase_all()
 	sheartime = sheartime+dt
+  call set_ik_bar(sheartime)
   state%t           = state%t     +dt
   state%step        = state%step  +1
 end subroutine

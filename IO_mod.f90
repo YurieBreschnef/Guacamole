@@ -179,18 +179,25 @@ module IO_mod
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_div!'
     !write div u  (k_i * u_i ==0)condition to dummy
-    state%s_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+    call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,1,sheartime)
+    call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,1,sheartime)
+    call transform(state%u%val(:,:,1),state%dummy_f%val(:,:,1),-1,1,sheartime)
+    call transform(state%u%val(:,:,2),state%dummy_f%val(:,:,2),-1,1,sheartime)
+
+    ! normal div
+    state%dummy_f%val(:,:,1) = state%ikx%val(:,:)*state%dummy_f%val(:,:,1) &
+                              +state%iky%val(:,:)*state%dummy_f%val(:,:,2) 
+
     !write brucker  (k_bar_i * u_i ==0)condition to other dummy
-    state%c_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+    state%dummy_f%val(:,:,2) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
-    call transform(state%c_dummy_f%val,state%cz_dummy_f%val,-1,1,state%t)
-    call dfftw_execute_dft(ifull2D,state%s_dummy_f%val,state%s_dummy%val)
+    call transform(state%dummy_f%val(:,:,1),state%dummy%val(:,:,1),1,1,sheartime)
+    call transform(state%dummy_f%val(:,:,2),state%dummy%val(:,:,2),1,1,sheartime)
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
 	  			write(20,*) real(i)*(Lx/real(xdim)),real(j)*(Ly/real(ydim))&
-	  			           ,real(state%s_dummy%val(i,j),real_outp_precision)&
-                     ,real(state%cz_dummy_f%val(i,j),real_outp_precision)
+	  			           ,real(state%dummy%val(i,j,1),real_outp_precision)&
+                     ,real(state%dummy%val(i,j,2),real_outp_precision)
 			end do
 		end do
     close(20)
@@ -514,6 +521,10 @@ module IO_mod
 		filename = adjustl(filename)
 		filename = trim(filename)
     if(state%step>=1) then
+
+    dummy%val(:,:) = real((state%iki_bar_sqr%val(:,:)*state%u_f%val(:,:,1) + state%iki_bar_sqr%val(:,:)*state%u_f%val(:,:,2) ))
+
+
 		open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_stat!'
 	 	write(20,*)               state%step,                       & !1
@@ -523,7 +534,8 @@ module IO_mod
                               maxval(real(state%u%val(:,:,1))), & !5
                               minval(real(state%u%val(:,:,1))), & !6
                               maxval(real(state%u%val(:,:,2))), & !7
-                              minval(real(state%u%val(:,:,2)))    !8
+                              minval(real(state%u%val(:,:,2))), & !8
+                              measure_av(dummy%val)               !9
     close(20)
     end if
   end subroutine

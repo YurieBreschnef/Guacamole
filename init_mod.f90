@@ -111,7 +111,7 @@ module init
     write(*,*)'_______________________________RUNTIME ESTIMATION______________________________'
     l = benchmarking
     benchmarking =1
-    state_nm1 = state  
+    state_np1 = state  
     call RK4_step()   ! to not compare the first writing step  with the second nonwriting
     call cpu_time(bm_timestepping_starttime)
     call RK4_step()
@@ -154,7 +154,7 @@ module init
             mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
     end if
     
-    state = state_nm1       ! reset state to init
+    state = state_np1       ! reset state to init
 
     benchmarking = l
     if(debuglevel .GE. 1) write(*,*) '_________END of Plausibility___ ________________________'
@@ -230,8 +230,8 @@ module init
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = xdim/8
-    ypoints = ydim/8
+    xpoints = xdim/32
+    ypoints = ydim/32
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = rand()
@@ -244,12 +244,12 @@ module init
               !state%temp_f%val(i,j) = cmplx(1.0_rp,1.0_rp,rp) 
               !-----------------------------------------------------------------------
 
-              state%temp%val(i,j) = state%temp%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-
-              !amp = (rand()-0.5_rp)
-              !state%temp%val(i,j) = amp
+!              state%temp%val(i,j) = state%temp%val(i,j) &
+!              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+!                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+!
+              amp = (rand()-0.5_rp)
+              state%temp%val(i,j) = amp
 
               !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
               !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
@@ -289,19 +289,19 @@ module init
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = xdim/9 
-    ypoints = ydim/7 
+    xpoints = xdim/16 
+    ypoints = ydim/16 
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = (rand())
         do i=0,xdim-1
           do j=0,ydim-1
-              state%chem%val(i,j) = state%chem%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+             ! state%chem%val(i,j) = state%chem%val(i,j) &
+             ! +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+             !              +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
-              !amp = (rand()-0.5_rp)
-              !state%chem%val(i,j) = amp
+              amp = (rand()-0.5_rp)
+              state%chem%val(i,j) = amp
 
               !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi) 
               !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 

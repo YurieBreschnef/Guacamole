@@ -132,11 +132,11 @@ function fu_diff(u_f,t)
       do j=0,ydim-1
         fu_diff(i,j,1) = D_visc*(state%iki_bar_sqr%val(i,j))*u_f(i,j,1)
         fu_diff(i,j,2) = D_visc*(state%iki_bar_sqr%val(i,j))*u_f(i,j,2)
+        !note minus sign intrinsic in (i*k)**2
       end do
     end do
   !$omp end do
   !$omp end parallel
-  !note minus sign intrinsic in (i*k)**2
   if(benchmarking ==1) bm_fu_diff_endtime=  omp_get_wtime()
 end function
 !----------------------------------------
@@ -276,10 +276,6 @@ function ft_L(temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   real(kind = rp),intent(in)                                   :: t
   call set_ik_bar(t)
-  !IF(ANY(IsNaN(real(temp_f))))  then
-  !  write(*,*) 'func ft_L(): NAN detected in input array'
-  !  stop
-  !end if
   ft_L = cmplx(0.0,0.0,rp)
   ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
   !ft_L = dealiase_field(ft_L)
@@ -477,7 +473,7 @@ function fc_adv(u_f,chem_f,t)
   !$omp do
     do i=0,xdim-1
       do j=0,ydim-1
-      !                                            temp_f* u          (realspace)
+      !                                            chem_f* u          (realspace)
       state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*state%dummy%val(i,j,1)
       state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*state%dummy%val(i,j,2)
       end do

@@ -5,8 +5,8 @@ load './gnuplot-palettes-master/jet.pal'
 aspect_ratio = 1
 Lx = 2.0*3.14159 
 Ly = 2.0*3.14159  
-xdim = 256 
-ydim = 256 
+xdim = 64 
+ydim = 64 
 
 
 max_spec_order = 0
@@ -44,8 +44,8 @@ no_of_img = 299
     #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem"   
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
-    set multiplot layout 4,2
-    #set xrange [0.0:36.25]
+    set multiplot layout 6,2
+    set xrange [0.0:2.00]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 with lines title "max temp"  , \
@@ -70,8 +70,8 @@ no_of_img = 299
              './data/E_stat/E_stat.dat' using 2:4 with lines title "E_{pot}"   ,\
              './data/E_stat/E_stat.dat' using 2:5 with lines title "E_{tot}"  
         set title 'simulation time vs. maximum of divergence field (should be near zero)'
-        plot './data/sys_stat/sys_stat.dat' using 2:3 with lines title "max div"             ,\
-             './data/sys_stat/sys_stat.dat' using 2:6 with lines title "max div (brucker)"
+        plot './data/sys_stat/sys_stat.dat' using 2:3 with lines title "max div"             #,\
+             #'./data/sys_stat/sys_stat.dat' using 2:6 with lines title "max div (brucker)"
 
         set title 'simulation time vs. shearstrength '
         plot './data/sys_stat/sys_stat.dat' using 2:4 with lines title "shear strength [arb]"
@@ -79,12 +79,13 @@ no_of_img = 299
         plot './data/sys_stat/sys_stat.dat' using 2:8 with lines title "y_aperiodicity [arb]", \
              './data/sys_stat/sys_stat.dat' using 2:9 with lines title "x_aperiodicity [arb]"
 
+        set title 'simulation time vs. stepwidth dt [arb] '
+        plot './data/sys_stat/sys_stat.dat' using 2:5 with lines title "dt [arb]"
+        set title 'simulation time vs. average vorticity [arb] '
+        plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
 
-        #set title 'simulation time vs. stepwidth dt [arb] '
-        #plot './data/sys_stat/sys_stat.dat' using 2:5 with lines title "dt [arb]"
-
-        #set title 'simulation time vs. average vorticity [arb] '
-        #plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
+        set title 'simulation time [arb] vs. average diffusion strength [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:9 with lines title "diff"   
     unset multiplot
     ##########################################################################
 
