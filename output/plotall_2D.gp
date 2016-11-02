@@ -3,8 +3,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 2.0*3.14159 
-Ly = 2.0*3.14159  
+Lx = 4.0*3.14159 
+Ly = 4.0*3.14159  
 xdim = 128 
 ydim = 128 
 
@@ -15,7 +15,7 @@ min_spec_order = -25
 no_of_img = 299 
 
     ####################STATISTICS###############################
-    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
+    set terminal pngcairo size 2200,1200 enhanced font 'Verdana,10'
 
     #set output './visual/stat/Energies.png'
     #set title 'simulation time [arb] vs. E_kin [arb]'
@@ -44,48 +44,89 @@ no_of_img = 299
     #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem"   
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
-    set multiplot layout 6,2
-    #set xrange [0.0:18.00]
+    set multiplot layout 4,4
+    #set xrange [0.0:15.00]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 with lines title "max temp"  , \
-             './data/T_stat/T_stat.dat' using 2:4 with lines title "mean temp" , \
-             './data/T_stat/T_stat.dat' using 2:5 with lines title "min temp"   
+             './data/T_stat/T_stat.dat' using 2:4 with lines title "min temp"  
+        set title 'simulation time vs. statistical Temperature measures [arb]'
+        plot './data/T_stat/T_stat.dat' using 2:5 with lines title "mean temp"    ,\
+             './data/T_stat/T_stat.dat' using 2:6 with lines title "std-dev temp" , \
+             './data/T_stat/T_stat.dat' using 2:7 with lines title "variance temp"
         set title 'simulation time vs. Chemical field measures [arb]'
         plot './data/C_stat/C_stat.dat' using 2:3 with lines title "max Chem"  , \
-             './data/C_stat/C_stat.dat' using 2:4 with lines title "mean Chem" , \
-             './data/C_stat/C_stat.dat' using 2:5 with lines title "min Chem"   
+             './data/C_stat/C_stat.dat' using 2:4 with lines title "min Chem"  
+        set title 'simulation time vs. statistical Chemical field measures [arb]'
+        plot './data/C_stat/C_stat.dat' using 2:5 with lines title "mean Chem" , \
+             './data/C_stat/C_stat.dat' using 2:6 with lines title "std-dev chem" , \
+             './data/C_stat/C_stat.dat' using 2:7 with lines title "variance chem"
 
-        set title 'simulation [arb] time vs. velocities (all directions) [arb]'
-        plot './data/u_stat/u_stat.dat' using 2:3 with lines title "v_{max}"   ,\
-             './data/u_stat/u_stat.dat' using 2:4 with lines title "v_{rms}"  
-        set title 'simulation [arb] time vs. velocities (specific directions) [arb]'
-        plot './data/u_stat/u_stat.dat' using 2:5 with lines title "vx_{max}"   ,\
-             './data/u_stat/u_stat.dat' using 2:6 with lines title "vx_{min}"   ,\
-             './data/u_stat/u_stat.dat' using 2:7 with lines title "vy_{max}"   ,\
-             './data/u_stat/u_stat.dat' using 2:8 with lines title "vy_{min}"  
+        set title 'simulation [arb] time vs. vx measures [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:3  with lines title "vx_{max}"   ,\
+             './data/u_stat/u_stat.dat' using 2:4  with lines title "vx_{min}"   
+        set title 'simulation [arb] time vs. statistical vx measures [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:5  with lines title "vx_{avg}"   ,\
+             './data/u_stat/u_stat.dat' using 2:6  with lines title "std-dev vx"   ,\
+             './data/u_stat/u_stat.dat' using 2:7  with lines title "variance vx" 
+        set title 'simulation [arb] time vs. vy measures [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:8  with lines title "vy_{max}"   ,\
+             './data/u_stat/u_stat.dat' using 2:9  with lines title "vy_{min}"   
+        set title 'simulation [arb] time vs. statistical vy measures [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:10  with lines title "vy_{avg}"   ,\
+             './data/u_stat/u_stat.dat' using 2:11  with lines title "std-dev vy"   ,\
+             './data/u_stat/u_stat.dat' using 2:12  with lines title "variance vy" 
 
+        set title 'simulation [arb] time vs. abs velocities (norm) [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:13 with lines title "v_{max}"   ,\
+             './data/u_stat/u_stat.dat' using 2:14 with lines title "v_{min}"   
+        set title 'simulation [arb] time vs. statistical abs velocities (norm) [arb]'
+        plot './data/u_stat/u_stat.dat' using 2:15 with lines title "v_{rms}"   ,\
+             './data/u_stat/u_stat.dat' using 2:16 with lines title "std-dev v"   ,\
+             './data/u_stat/u_stat.dat' using 2:17 with lines title "variance v"  
         set title 'simulation time [arb] vs. E_kin [arb]'
         plot './data/E_stat/E_stat.dat' using 2:3 with lines title "E_{kin}"   ,\
              './data/E_stat/E_stat.dat' using 2:4 with lines title "E_{pot}"   ,\
              './data/E_stat/E_stat.dat' using 2:5 with lines title "E_{tot}"  
-        set title 'simulation time vs. maximum of divergence field (should be near zero)'
-        plot './data/sys_stat/sys_stat.dat' using 2:3 with lines title "max div"             #,\
-             #'./data/sys_stat/sys_stat.dat' using 2:6 with lines title "max div (brucker)"
-
         set title 'simulation time vs. shearstrength '
         plot './data/sys_stat/sys_stat.dat' using 2:4 with lines title "shear strength [arb]"
+
         set title 'aperiodicity measure in x and y-dir vs. t [arb] '
         plot './data/sys_stat/sys_stat.dat' using 2:8 with lines title "y_aperiodicity [arb]", \
              './data/sys_stat/sys_stat.dat' using 2:9 with lines title "x_aperiodicity [arb]"
-
         set title 'simulation time vs. stepwidth dt [arb] '
         plot './data/sys_stat/sys_stat.dat' using 2:5 with lines title "dt [arb]"
         set title 'simulation time vs. average vorticity [arb] '
         plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
 
-        set title 'simulation time [arb] vs. average diffusion strength [arb]'
-        plot './data/u_stat/u_stat.dat' using 2:9 with lines title "diff"   
+    unset multiplot
+    ##########################################################################
+    #FU PLOTS
+    set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
+    set output './visual/stat/fu_stat_combo.png'
+    set multiplot layout 3,1
+    #set xrange [0.0:15.00]
+        set title 'simulation time [arb] vs. function-terms[arb] (du/dt = adv+diff+buo+shear) '
+        plot './data/fu_stat/fu_stat.dat' using 2:5  with lines lw 3 title "avg fu"       ,\
+             './data/fu_stat/fu_stat.dat' using 2:10 with lines lw 3 title "avg fu_Nuk (advection)"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:15 with lines lw 3 title "avg fu_diff"  ,\
+             './data/fu_stat/fu_stat.dat' using 2:20 with lines lw 3 title "avg fu_buo"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:25 with lines lw 3 title "avg fu_shear"  
+
+        set title 'simulation time [arb] vs. max function-terms[arb] (du/dt = adv+diff+buo+shear) '
+        plot './data/fu_stat/fu_stat.dat' using 2:3  with lines lw 3 title "max fu"       ,\
+             './data/fu_stat/fu_stat.dat' using 2:8  with lines lw 3 title "max fu_Nuk (advection)"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:13 with lines lw 3 title "max fu_diff"  ,\
+             './data/fu_stat/fu_stat.dat' using 2:18 with lines lw 3 title "max fu_buo"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:23 with lines lw 3 title "max fu_shear"  
+
+        set title 'simulation time [arb] vs. min function-terms[arb] (du/dt = adv+diff+buo+shear) '
+        plot './data/fu_stat/fu_stat.dat' using 2:3  with lines lw 3 title "min fu"       ,\
+             './data/fu_stat/fu_stat.dat' using 2:8  with lines lw 3 title "min fu_Nuk (advection)"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:13 with lines lw 3 title "min fu_diff"  ,\
+             './data/fu_stat/fu_stat.dat' using 2:18 with lines lw 3 title "min fu_buo"   ,\
+             './data/fu_stat/fu_stat.dat' using 2:23 with lines lw 3 title "min fu_shear"  
+
     unset multiplot
     ##########################################################################
 
@@ -268,7 +309,7 @@ do for [i=0:no_of_img] {
     unset yrange
     set xtics
     set ytics
-  	set title 'energy vs wavenumber k [arb]'
+  	set title 'log(energy) vs wavenumber k [arb]'
    	plot './data/k_spec/'.i.'.spec.dat' using 2:3 with lines notitle
 
   	#set title 'log(energy) vs wavenumber k [arb]'

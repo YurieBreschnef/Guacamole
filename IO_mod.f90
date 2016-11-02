@@ -3,6 +3,7 @@ module IO_mod
   use plans
   use nabla
   use trafo
+  use pdgl
   implicit none
   contains
 
@@ -34,6 +35,7 @@ module IO_mod
     call write_temp_f_remap()
 
     call write_u_stat()     ! u-relatetd measures
+    call write_fu_stat()    ! pdgl-relatetd measures (influences of terms)
     call write_E_stat()     ! Energy related measures
     call write_T_stat()     ! Energy related measures
     call write_C_stat()     ! Energy related measures
@@ -508,10 +510,103 @@ module IO_mod
 		end do
     close(20)
   end subroutine
+  subroutine write_fu_stat()
+    !write measured u- diagnostics to file.
+    integer                             :: io_error = 0
+    type(vfield)                        :: vdummy
+
+    type(sfield)                        :: fu_dummy
+    type(sfield)                        :: fu_Nuk_dummy
+    type(sfield)                        :: fu_diff_dummy
+    type(sfield)                        :: fu_buo_dummy
+    type(sfield)                        :: fu_shear_dummy
+
+    type(sfield_stats)                  :: fu_stats
+    type(sfield_stats)                  :: fu_Nuk_stats
+    type(sfield_stats)                  :: fu_diff_stats
+    type(sfield_stats)                  :: fu_buo_stats
+    type(sfield_stats)                  :: fu_shear_stats
+
+		character(len=1024) 		  					:: filename
+		character(len=50) 		  						:: suffix
+		character(len=22),parameter					:: path ='./output/data/fu_stat/'
+
+
+    !fu
+    vdummy%val = fu(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime)
+    fu_dummy%val = cmplx((real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
+    fu_stats = measure_sfield_stats(fu_dummy)
+    !fu_Nuk
+    vdummy%val = fu_Nuk(state%u_f%val,sheartime)
+    fu_Nuk_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
+    fu_Nuk_stats = measure_sfield_stats(fu_Nuk_dummy)
+    !fu_diff
+    vdummy%val = fu_diff(state%u_f%val,sheartime)
+    fu_diff_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
+    fu_diff_stats= measure_sfield_stats(fu_diff_dummy)
+    !fu_buo
+    vdummy%val = fu_buo(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime)
+    fu_buo_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
+    fu_buo_stats= measure_sfield_stats(fu_buo_dummy)
+    !fu_shear
+    vdummy%val = fu_shear(state%u_f%val,sheartime)
+    fu_shear_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
+    fu_shear_stats= measure_sfield_stats(fu_shear_dummy)
+
+
+		write(suffix,"(A11)") "fu_stat.dat"
+    suffix = trim(adjustl(suffix))
+    filename = path //suffix
+		filename = adjustl(filename)
+		filename = trim(filename)
+    if(state%step>=1) then
+		open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error) 
+    if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_fu_stat!'
+	 	write(20,*)               state%step,                           & !1
+                              state%t,                              & !2
+
+                              fu_stats%val(0),                      & !3  max
+                              fu_stats%val(1),                      & !4  min
+                              fu_stats%val(2),                      & !5  mean
+                              fu_stats%val(3),                      & !6  std-dev
+                              fu_stats%val(4),                      & !7  variance
+
+                              fu_Nuk_stats%val(0),                  & !8  max
+                              fu_Nuk_stats%val(1),                  & !9  min
+                              fu_Nuk_stats%val(2),                  & !10 mean
+                              fu_Nuk_stats%val(3),                  & !11 std-dev
+                              fu_Nuk_stats%val(4),                  & !12 variance
+
+                              fu_diff_stats%val(0),                 & !13 max
+                              fu_diff_stats%val(1),                 & !14 min
+                              fu_diff_stats%val(2),                 & !15 mean
+                              fu_diff_stats%val(3),                 & !16 std-dev
+                              fu_diff_stats%val(4),                 & !17 variance
+
+                              fu_buo_stats%val(0),                  & !18 max
+                              fu_buo_stats%val(1),                  & !19 min
+                              fu_buo_stats%val(2),                  & !20 mean
+                              fu_buo_stats%val(3),                  & !21 std-dev
+                              fu_buo_stats%val(4),                  & !22 variance
+
+                              fu_shear_stats%val(0),                & !23 max
+                              fu_shear_stats%val(1),                & !24 min
+                              fu_shear_stats%val(2),                & !25 mean
+                              fu_shear_stats%val(3),                & !26 std-dev
+                              fu_shear_stats%val(4)                   !27 variance
+
+    close(20)
+    end if
+  end subroutine
   subroutine write_u_stat()
     !write measured u- diagnostics to file.
     integer                             :: io_error = 0
-    type(sfield)                        :: dummy
+    type(sfield)                        :: vx_dummy
+    type(sfield)                        :: vy_dummy
+    type(sfield)                        :: v_abs_dummy
+    type(sfield_stats)                  :: vx_stats
+    type(sfield_stats)                  :: vy_stats
+    type(sfield_stats)                  :: v_abs_stats
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=21),parameter					:: path ='./output/data/u_stat/'
@@ -522,20 +617,36 @@ module IO_mod
 		filename = trim(filename)
     if(state%step>=1) then
 
-    dummy%val(:,:) = real((state%iki_bar_sqr%val(:,:)*state%u_f%val(:,:,1) + state%iki_bar_sqr%val(:,:)*state%u_f%val(:,:,2) ))
+    vx_dummy%val = state%u%val(:,:,1)
+    vy_dummy%val = state%u%val(:,:,2)
+    v_abs_dummy%val = sqrt(real(state%u%val(:,:,2),rp)**2 +real(state%u%val(:,:,1),rp)**2)
+    vx_stats = measure_sfield_stats(vx_dummy)
+    vy_stats = measure_sfield_stats(vy_dummy)
+    v_abs_stats = measure_sfield_stats(v_abs_dummy)
 
 
 		open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_stat!'
-	 	write(20,*)               state%step,                       & !1
-                              state%t,                          & !2
-                              measure_vmax(),                   & !3
-                              measure_u_rms(),                  & !4
-                              maxval(real(state%u%val(:,:,1))), & !5
-                              minval(real(state%u%val(:,:,1))), & !6
-                              maxval(real(state%u%val(:,:,2))), & !7
-                              minval(real(state%u%val(:,:,2))), & !8
-                              measure_av(dummy%val)               !9
+	 	write(20,*)               state%step,                           & !1
+                              state%t,                              & !2
+                              vx_stats%val(0),                      & !3  max
+                              vx_stats%val(1),                      & !4  min
+                              vx_stats%val(2),                      & !5  mean
+                              vx_stats%val(3),                      & !6  std-dev
+                              vx_stats%val(4),                      & !7  variance
+
+                              vy_stats%val(0),                      & !8  max
+                              vy_stats%val(1),                      & !9  min
+                              vy_stats%val(2),                      & !10 mean
+                              vy_stats%val(3),                      & !11 std-dev
+                              vy_stats%val(4),                      & !12 variance
+
+                              v_abs_stats%val(0),                   & !13 max
+                              v_abs_stats%val(1),                   & !14 min
+                              v_abs_stats%val(2),                   & !15 mean
+                              v_abs_stats%val(3),                   & !16 std-dev
+                              v_abs_stats%val(4)                      !17 variance
+
     close(20)
     end if
   end subroutine
@@ -579,14 +690,16 @@ module IO_mod
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_sys_stat!'
+
+      !call dfftw_execute_dft(ifull2D,int_dummy_f%val,int_dummy%val)
       !divergence physical
+      call transform( state%u_f%val, int_dummy%val,-1,1,sheartime) 
+      call transform(int_dummy%val,int_dummy_f%val,1,0,sheartime) 
       int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                                 +state%iky%val(:,:)*state%u_f%val(:,:,2) 
       !divergence brucker
       int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                                +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
-      call dfftw_execute_dft(ifull2D,int_dummy_f%val,int_dummy%val)
-      call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
 
       ! measure how similar the upper and lower end of sim-box are
       y_aperiodicity_measure = 0.0_rp
@@ -608,14 +721,13 @@ module IO_mod
 
 	 	  write(20,*) state%step,                                               & !1
                   state%t,                                                  & !2
-                  0.0_rp,                                                   &
-                  !maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
+                  maxval(real(int_dummy_f%val,real_outp_precision)),        & !3 maximum of divergence
                   shear,                                                    & !4 strength of shear
                   dt,                                                       & !5
-                  maxval(real(int1_dummy%val,real_outp_precision)),         & !6 max brucker div 
+                  maxval(real(int1_dummy_f%val,real_outp_precision)),         & !6 max brucker div 
                   measure_av(state%s_dummy_f%val),                          & !7 average vorticity 
                   y_aperiodicity_measure,         &                           !8 y_aperiodicity
-                  x_aperiodicity_measure                                       !8 x_aperiodicity
+                  x_aperiodicity_measure                                      !8 x_aperiodicity
 
       close(20)
     end if
@@ -625,6 +737,7 @@ module IO_mod
     !write measured T-diagnostics to file.
     integer                             :: io_error = 0
     type(sfield)                        :: dummy
+    type(sfield_stats)                  :: t_stats
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=21),parameter					:: path ='./output/data/T_stat/'
@@ -635,10 +748,17 @@ module IO_mod
 		filename = trim(filename)
     !write(*,*) 'sub write_T_stat() has been called'
     if(state%step>=1) then
+
+    t_stats = measure_sfield_stats(state%temp)
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_T_stat!'
-	 	  write(20,*) state%step,state%t,maxval(real(state%temp%val,real_outp_precision)),measure_av(state%temp%val)&
-                   ,minval(real(state%chem%val,real_outp_precision))
+	 	  write(20,*) state%step,                                       &! 1
+                  state%t,                                          &! 2  
+                  t_stats%val(0),                                   &! 3   
+                  t_stats%val(1),                                   &! 4  
+                  t_stats%val(2),                                   &! 5  
+                  t_stats%val(3),                                   &! 6  
+                  t_stats%val(4)                                     ! 7
       close(20)
     end if
   end subroutine
@@ -647,6 +767,7 @@ module IO_mod
     !write measured T-diagnostics to file.
     integer                             :: io_error = 0
     type(sfield)                        :: dummy
+    type(sfield_stats)                  :: c_stats
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=21),parameter					:: path ='./output/data/C_stat/'
@@ -656,10 +777,16 @@ module IO_mod
 		filename = adjustl(filename)
 		filename = trim(filename)
     if(state%step>=1) then
+    c_stats = measure_sfield_stats(state%chem)
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_C_stat!'
-	 	  write(20,*) state%step,state%t,maxval(real(state%chem%val,real_outp_precision)),measure_av(state%chem%val)&
-                   ,minval(real(state%chem%val,real_outp_precision))
+	 	  write(20,*) state%step,                                               &! 1
+                  state%t,                                                  &! 2
+                  c_stats%val(0),                                           &! 3
+                  c_stats%val(1),                                           &! 4
+                  c_stats%val(2),                                           &! 5
+                  c_stats%val(3),                                           &! 6
+                  c_stats%val(4)                                             ! 7
       close(20)
     end if
   end subroutine

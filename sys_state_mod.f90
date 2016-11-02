@@ -10,6 +10,18 @@ module sys_state
     ! Chem/Temp-field value (i,j), amplitude stored in %val
   end type
 
+  type sfield_stats
+    ! statistical measures of a scalar field
+    ! index:            meaning
+    !
+    !   0               max
+    !   1               min
+    !   2               mean
+    !   3               standard deviation 
+    !   4               variance
+  	real(kind=rp),dimension(0:4):: val = 0.0_rp
+  end type
+
   type vfield
     !vector field
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2):: val = 0.0_rp  
@@ -61,6 +73,40 @@ module sys_state
   type(system_state)                                          ::state
 
 contains
+
+
+  function measure_sfield_stats(in_field)
+    ! measures statistics of a given scalar field. see typedef for indice-explanation
+    type(sfield),intent(in)           ::in_field
+    type(sfield_stats)                ::measure_sfield_stats
+
+    !minimum/maximum / average
+    measure_sfield_stats%val = 0.0_rp
+    do i=0,xdim-1
+    do j=0,ydim-1
+        !max
+        if(measure_sfield_stats%val(0) < real(in_field%val(i,j),rp)) measure_sfield_stats%val(0)= real(in_field%val(i,j),rp)
+        !min
+        if(measure_sfield_stats%val(1) > real(in_field%val(i,j),rp)) measure_sfield_stats%val(1)= real(in_field%val(i,j),rp)
+        !sum for average
+        measure_sfield_stats%val(2) = measure_sfield_stats%val(2) + real(in_field%val(i,j),rp)
+    end do
+    end do
+    !norm average
+    measure_sfield_stats%val(2) = measure_sfield_stats%val(2)/real(xdim*ydim,rp) 
+    !std-dev and variance
+    do i=0,xdim-1
+    do j=0,ydim-1
+        !sum up deviations from mean for std-dev
+        measure_sfield_stats%val(3) = measure_sfield_stats%val(3) + abs(real(in_field%val(i,j),rp)-measure_sfield_stats%val(2))
+        !sum up squared deviations from mean for variance
+        measure_sfield_stats%val(4) = measure_sfield_stats%val(4) + abs(real(in_field%val(i,j),rp)-measure_sfield_stats%val(2))**2
+    end do
+    end do
+    measure_sfield_stats%val(3) = measure_sfield_stats%val(3)/real(xdim*ydim,rp)
+    measure_sfield_stats%val(4) = measure_sfield_stats%val(4)/real(xdim*ydim,rp) 
+    
+  end function 
 
   function measure_Ekin()
     !measures a absolute value for kinetic energy within system.
