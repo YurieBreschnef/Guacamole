@@ -239,8 +239,8 @@ function fu_Nuk(u_f,t)
   !$omp end parallel
 
   !dealiase
-  fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
-  fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
+  !fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
+  !fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
   if(benchmarking ==1) bm_fu_Nuk_endtime=  omp_get_wtime()
 end function
 !---------------------------F_temp------------------------------------------------------------

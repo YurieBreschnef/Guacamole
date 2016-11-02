@@ -141,7 +141,7 @@ module init
     end if
     !----------------------------------------------------------------------------------------
     call cpu_time(bm_timestepping_starttime)
-    call ETD2_step()
+    call IF2_step()
     call cpu_time(bm_timestepping_endtime)
     call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
     write(*,*) '______________________________________________________'

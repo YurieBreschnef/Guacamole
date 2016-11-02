@@ -8,8 +8,8 @@ contains
 
 subroutine remap_stepwise()
   call set_ik_bar(sheartime)
-  state%u_f%val(:,:,1) = remap_brucker(state%u_f%val(:,:,1))
-  state%u_f%val(:,:,2) = remap_brucker(state%u_f%val(:,:,2))
+  state%u_f%val(:,:,1) =  remap_brucker(state%u_f%val(:,:,1))
+  state%u_f%val(:,:,2) =  remap_brucker(state%u_f%val(:,:,2))
   state%temp_f%val(:,:) = remap_brucker(state%temp_f%val(:,:))
   state%chem_f%val(:,:) = remap_brucker(state%chem_f%val(:,:))
 
@@ -26,15 +26,16 @@ function remap_brucker(in_arr)
     if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
     write(*,*) '---sheartime reached---'
 
-    ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
-    do i =0,xdim-1 
-      do j =0,ydim-1 
-        if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
-            .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
-          remap_brucker(i,j) = cmplx(0.0_rp,0.0_rp)
-        end if
-      end do
-    end do
+   ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
+    call surgery(remap_brucker) 
+    !do i =0,xdim-1 
+    !  do j =0,ydim-1 
+    !    if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
+    !        .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
+    !      remap_brucker(i,j) = cmplx(0.0_rp,0.0_rp)
+    !    end if
+    !  end do
+    !end do
     !----------------------------------------------------------------------------------------
     !STEP 1: Transform back to realspace in y-direction!
 	  do i=0,xdim-1
@@ -80,6 +81,7 @@ subroutine surgery(patient)
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(inout)            :: patient
 
       call set_ik_bar(sheartime)
+      ! set all modes in brucker space to zero which can't  be resolved on the real space grid
       do i =0,xdim-1 
         do j =0,ydim-1 
           if((aimag(state%iky_bar%val(i,j)) > ky_max).OR.(aimag(state%iky_bar%val(i,j)) <ky_min)) then
@@ -87,7 +89,6 @@ subroutine surgery(patient)
           end if
         end do
       end do
-        ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
       !do i =0,xdim-1 
       !  do j =0,ydim-1 
       !    if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &

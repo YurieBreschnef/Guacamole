@@ -5,8 +5,8 @@ load './gnuplot-palettes-master/jet.pal'
 aspect_ratio = 1
 Lx = 2.0*3.14159 
 Ly = 2.0*3.14159  
-xdim = 64 
-ydim = 64 
+xdim = 128 
+ydim = 128 
 
 
 max_spec_order = 0
@@ -45,7 +45,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 6,2
-    set xrange [0.0:2.00]
+    #set xrange [0.0:18.00]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 with lines title "max temp"  , \
