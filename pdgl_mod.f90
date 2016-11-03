@@ -258,14 +258,8 @@ function ft(u_f,temp_f,t)
   ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
   ft = ft + ft_diff(temp_f)           !DIFFUSION
   ft = ft + ft_strat(u_f,temp_f)      !BACKGROUND STRATIFICATION
-
-  ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
-
   ft = dealiase_field(ft)
-  !IF(ALL(ft ==cmplx(0.0_rp,0.0,rp)))  then
-  !  write(*,*) 'func ft(): all output values are zero! '
-  !  !stop
-  !end if
+  ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
   if(benchmarking ==1) bm_ft_endtime=  omp_get_wtime()
 end function 
 !--------------------------------------

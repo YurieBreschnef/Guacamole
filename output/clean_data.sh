@@ -53,6 +53,11 @@ cd ..
 cd u_stat/
 yes | rm *.dat
 cd ..
+
+cd fu_stat/
+yes | rm *.dat
+cd ..
+
 cd E_stat/
 yes | rm *.dat
 cd ..

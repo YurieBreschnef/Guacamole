@@ -1,6 +1,5 @@
 module timestepping
   ! implements time-stepping scemes that are called by e.g. 'call RK4_step()','call euler_step()'
-  ! remapping is called stepwise, so all related operations go there
   use sys_state
   use pdgl
   use plans
@@ -16,13 +15,11 @@ subroutine reset_dt(new_dt)
 end subroutine
 !------------------------------------------------------------------------------------------
 subroutine RK4_step()
-	! performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
-
+  ! performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
   !___________ REMAPPING_____________________
   if(remapping==1 .AND.shearing==1.) then
     call remap_stepwise()
   end if
-
   !_____________________k1_________________________________
   call set_ik_bar(sheartime) 
 	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
@@ -82,77 +79,65 @@ subroutine RK4_step()
                                                     +2.0_rp*state%c_k3%val&
                                                            +state%c_k4%val)
   call dealiase_all()
-
-	sheartime = sheartime+dt
-	state%t=state%t+dt
-	state%step=state%step+1
+  sheartime = sheartime+dt
+  state%t=state%t+dt
+  state%step=state%step+1
 end subroutine
 !------------------------------------------------------------------------------------------
 subroutine euler_step()
-	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
+  !performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'euler sub called'
-
   ! REMAPPING
   if(remapping==1 .AND.shearing==1.) then
     call remap_stepwise()
   end if
-
   call set_ik_bar(sheartime) 
-	state_np1%u_f%val    = state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
-	state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
-	state_np1%chem_f%val = state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
-
+  state_np1%u_f%val    = state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
+  state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
+  state_np1%chem_f%val = state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
   state%u_f%val     = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
-
   !call dealiase_all()
-
-	sheartime = sheartime+dt
-	state%t   = state%t+dt
-	state%step= state%step+1
+  sheartime = sheartime+dt
+  state%t   = state%t+dt
+  state%step= state%step+1
 end subroutine
-!------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
 subroutine IF2_step()
   ! perfomrs Integrating factor technique as in Brucker2007 (2nd order estimation of integral)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_q
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_exp_qh ! read as exp(q*h)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_exp_mqh ! read as exp(q*h)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_q
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_exp_qh ! read as exp(q*h)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_exp_mqh ! read as exp(q*h)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_q
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_exp_qh ! read as exp(q*h)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_exp_mqh ! read as exp(q*h)
-
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)  :: u_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)  :: u_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)  :: u_RHS_np1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)  :: u_exp_qh  ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)  :: u_exp_mqh ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: t_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: t_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: t_RHS_np1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: t_exp_qh  ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: t_exp_mqh ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: c_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: c_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: c_RHS_np1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: c_exp_qh  ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)      :: c_exp_mqh ! read as exp(q*h)
   ! REMAPPING
   if(remapping==1 .AND.shearing==1.) then
     call remap_stepwise()
   end if
-  
   ! set q-values for exponent, note the minus sign in iki_sqr
   u_q(:,:,1) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
   u_q(:,:,2) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
   t_q        = real(-D_therm *state%iki_bar_sqr%val,rp)
   c_q        = real(-D_comp  *state%iki_bar_sqr%val,rp)
-
   ! calc exponentials for multiplication
   u_exp_qh = real(exp(u_q*dt),rp)
   t_exp_qh = real(exp(t_q*dt),rp)
   c_exp_qh = real(exp(c_q*dt),rp)
-
   ! with minus in exponent for timestep
   u_exp_mqh = real(exp(-u_q*dt),rp)
   t_exp_mqh = real(exp(-t_q*dt),rp)
   c_exp_mqh = real(exp(-c_q*dt),rp)
-
   ! calc  RHS_n and RHS_np1 (read as n plus one)
   u_RHS_n   = fu_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh,state%chem_f%val*c_exp_qh,sheartime)
   t_RHS_n   = ft_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh                          ,sheartime)
@@ -167,7 +152,6 @@ subroutine IF2_step()
   c_RHS_np1 = fc_N(state%u_f%val*u_exp_qh+dt*u_RHS_n      &
                   ,state%chem_f%val*c_exp_qh +dt*c_RHS_n  &
                   ,sheartime+dt)
-
   ! make step
   state%u_f%val   =state%u_f%val    *u_exp_mqh + dt_2*(u_RHS_n*u_exp_mqh + u_RHS_np1)
   state%temp_f%val=state%temp_f%val *t_exp_mqh + dt_2*(t_RHS_n*t_exp_mqh + t_RHS_np1)
@@ -178,5 +162,4 @@ subroutine IF2_step()
   state%t           = state%t     +dt
   state%step        = state%step  +1
 end subroutine
-
 end module

@@ -1,11 +1,10 @@
 module init
   !module for all actions to be happening at program start
+use const
   use sys_state
-	use const
   use timestepping
-  !use test
-	use plans
-	use trafo 
+  use plans
+  use trafo 
   implicit none
 
   contains

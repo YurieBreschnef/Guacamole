@@ -1,7 +1,6 @@
 #!/bin/bash -e
 echo "bash: compile"
 
-
 gfortran -I/usr/include \
 const_mod.f90 \
 sys_state_mod.f90 \

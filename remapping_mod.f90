@@ -1,6 +1,6 @@
 module remap
-use sys_state
 use const
+use sys_state
 use trafo
 
 contains

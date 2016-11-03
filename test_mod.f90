@@ -4,8 +4,8 @@ module test
   ! TODO: add test for flat case (zdim<4)
   ! TODO: add sub to compare pencil-decomp and fftw3D trafo
   ! TODO: add tests for pdgl-terms  (diff etc.)
-  use sys_state
   use const
+  use sys_state
   use trafo
   use timestepping
   use init

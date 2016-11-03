@@ -3,10 +3,10 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 4.0*3.14159 
-Ly = 4.0*3.14159  
-xdim = 128 
-ydim = 128 
+Lx = 2.0*3.14159 
+Ly = 2.0*3.14159  
+xdim = 256 
+ydim = 256 
 
 
 max_spec_order = 0

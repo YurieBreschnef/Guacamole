@@ -33,6 +33,7 @@ program guacamole
       call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
       call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
       call write_u_stat()
+      call write_fu_stat()
       call write_E_stat()
       call write_T_stat()
       call write_C_stat()
