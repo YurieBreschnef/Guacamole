@@ -7,12 +7,6 @@ module timestepping
   implicit none
 
   contains
-subroutine reset_dt(new_dt)
-  ! resets all dt-dependencies to new_dt
-  real(kind = rp)               :: new_dt
-  dt      = new_dt
-  dt_2    = dt*(1.0_rp/ 2.0_rp)           
-end subroutine
 !------------------------------------------------------------------------------------------
 subroutine RK4_step()
   ! performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
@@ -157,9 +151,106 @@ subroutine IF2_step()
   state%temp_f%val=state%temp_f%val *t_exp_mqh + dt_2*(t_RHS_n*t_exp_mqh + t_RHS_np1)
   state%chem_f%val=state%chem_f%val *c_exp_mqh + dt_2*(c_RHS_n*c_exp_mqh + c_RHS_np1)
   !call dealiase_all()
-	sheartime = sheartime+dt
+  sheartime = sheartime+dt
   call set_ik_bar(sheartime)
   state%t           = state%t     +dt
   state%step        = state%step  +1
 end subroutine
+
+subroutine ABBDF3_step()
+  !calculates a timestep according to AB/BDF theme as in [Peyret 2002]
+  !starting sceme
+  if(state%step==0) then
+    write(*,*) 'sub ABBDF3: staring scheme called..'
+    state_nm2 = state
+    call euler_step()
+    state_nm1 = state
+    call euler_step()
+    write(*,*) 'sub ABBDF3: staring scheme done..'
+    return
+  else
+    !write(*,*) 'sub ABBDF3: calculating first part, current step:',state%step
+    state_np1     = state
+    state_np1%u_f%val   =(a_1*state%u_f%val    + a_2*state_nm1%u_f%val     + a_3*state_nm2%u_f%val   )
+    state_np1%temp_f%val=(a_1*state%temp_f%val + a_2*state_nm1%temp_f%val  + a_3*state_nm2%temp_f%val)
+    state_np1%chem_f%val=(a_1*state%chem_f%val + a_2*state_nm1%chem_f%val  + a_3*state_nm2%chem_f%val)
+
+    !write(*,*) 'sub ABBDF3: calculating second part'
+    state_np1%u_f%val   =(-state_np1%u_f%val&
+          	+dt*( b_0*fu(state%u_f%val    ,state%temp_f%val    ,state%chem_f%val    ,sheartime)&
+                       +b_1*fu(state_nm1%u_f%val,state_nm1%temp_f%val,state_nm1%chem_f%val,sheartime-dt)&
+                       +b_2*fu(state_nm2%u_f%val,state_nm2%temp_f%val,state_nm2%chem_f%val,sheartime-(2.0_rp*dt))))/a_0
+    state_np1%temp_f%val   =(-state_np1%temp_f%val&
+          	+dt*( b_0*ft(state%u_f%val    ,state%temp_f%val    ,sheartime)&
+                       +b_1*ft(state_nm1%u_f%val,state_nm1%temp_f%val,sheartime-dt)&
+                       +b_2*ft(state_nm2%u_f%val,state_nm2%temp_f%val,sheartime-(2.0_rp*dt))))/a_0
+    state_np1%chem_f%val   =(-state_np1%chem_f%val&
+          	+dt*( b_0*ft(state%u_f%val    ,state%chem_f%val    ,sheartime)&
+                       +b_1*ft(state_nm1%u_f%val,state_nm1%chem_f%val,sheartime-dt)&
+                       +b_2*ft(state_nm2%u_f%val,state_nm2%chem_f%val,sheartime-(2.0_rp*dt))))/a_0
+
+    !write(*,*) 'sub ABBDF3: resetting states'
+    !set new states
+    state_nm2 = state_nm1
+    state_nm1 = state
+    state     = state_np1
+
+    sheartime = sheartime+dt
+    call set_ik_bar(sheartime)
+    state%t           = state%t     +dt
+    state%step        = state%step  +1
+    !write(*,*) 'sub ABBDF3: make timestep, current step:', state%step
+  end if
+end subroutine
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 end module

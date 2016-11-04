@@ -50,6 +50,15 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
+	real(kind = rp),parameter			      :: a_0=  11.0_rp / 6.0_rp
+	real(kind = rp),parameter			      :: a_1=  -3.0_rp
+	real(kind = rp),parameter			      :: a_2=   3.0_rp / 2.0_rp
+	real(kind = rp),parameter			      :: a_3=  -1.0_rp / 3.0_rp
+
+	real(kind = rp),parameter			      :: b_0=   3.0_rp 
+	real(kind = rp),parameter			      :: b_1=  -3.0_rp
+	real(kind = rp),parameter			      :: b_2=   1.0_rp
+
 	real(kind = rp)               :: shear    = 0.01_rp
   integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
