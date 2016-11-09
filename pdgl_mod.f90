@@ -58,20 +58,21 @@ function fu_N(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
   if(benchmarking ==1) bm_fu_N_starttime=  omp_get_wtime()
-  IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
-    write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array u_f'
-  end if
-  IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
-    write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array chem_f'
-  end if
-  IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
-    write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
-  end if
+  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array u_f'
+  !end if
+  !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array chem_f'
+  !end if
+  !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
+  !end if
 
   call set_ik_bar(t)
-  fu_N = cmplx(0.0_rp,0.0_rp,rp)
-  fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
-  fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu_N = cmplx(0.0_rp,0.0_rp,rp)
+  !fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
+  !fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu_N = fu_Nuk(u_f,t) + fu_buo(u_f,temp_f,chem_f,t)
   if(shearing==1) then
     fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
   end if
@@ -80,7 +81,7 @@ function fu_N(u_f,temp_f,chem_f,t)
   fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
   fu_N(:,:,2) = dealiase_field(fu_N(:,:,2))
 
-  IF(ALL((real(fu_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fu_N does not contribute to pdgl!'
+  !IF(ALL((real(fu_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fu_N does not contribute to pdgl!'
   if(benchmarking ==1) bm_fu_N_endtime=  omp_get_wtime()
 end function 
 !----------------------------------------
@@ -299,7 +300,7 @@ function ft_N(u_f,temp_f,t)
   ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
   ft_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
   !ft_N = dealiase_field(ft_N)
-  IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
+  !IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
   if(benchmarking ==1) bm_ft_N_endtime=  omp_get_wtime()
 end function 
 !--------------------------------------
@@ -441,7 +442,7 @@ function fc_N(u_f,chem_f,t)
   fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
   fc_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
   !fc_N = dealiase_field(fc_N)
-  IF(ALL((real(fc_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fc_N does not contribute to pdgl!'
+  !IF(ALL((real(fc_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fc_N does not contribute to pdgl!'
   if(benchmarking ==1) bm_fc_N_endtime=  omp_get_wtime()
 end function 
 !--------------------------------------

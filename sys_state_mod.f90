@@ -1,7 +1,7 @@
 module sys_state
-	! state-module: contains all information characterizing a system state at a given time
+  ! state-module: contains all information characterizing a system state at a given time
   ! holds fields, current time and step
-	use const
+  use const
   implicit none
 
   type sfield
@@ -55,23 +55,23 @@ module sys_state
     type(sfield)                      :: s_dummy
     type(sfield)                      :: s_dummy_f
 
+    type(kfield)                      :: ikx,iky! k's for deriv
+    type(kfield)                      :: ikx_sqr,iky_sqr! k's for deriv
+    type(kfield)                      :: iki_sqr
 
-  	type(kfield)                      :: ikx,iky! k's for deriv
-  	type(kfield)                      :: ikx_sqr,iky_sqr! k's for deriv
-  	type(kfield)                      :: iki_sqr
+    type(kfield)                      :: ikx_bar,iky_bar! k's for deriv
+    type(kfield)                      :: ikx_bar_sqr,iky_bar_sqr! k's for deriv
+    type(kfield)                      :: iki_bar_sqr
 
-  	type(kfield)                      :: ikx_bar,iky_bar! k's for deriv
-  	type(kfield)                      :: ikx_bar_sqr,iky_bar_sqr! k's for deriv
-  	type(kfield)                      :: iki_bar_sqr
-
-  	real(kind = rp)								   	:: t	  = 0.0_rp	! time variable
-  	integer									    	   	:: step = 0 			! acute step of sim
+    real(kind = rp)                   :: t    = 0.0_rp	! time variable
+    integer	                      :: step = 0       ! acute step of sim
   end type
 
   !MAIN STATE VARIABLE:
-  type(system_state)                                          ::state_np1 !state n+1
+  type(system_state)                                          ::state_np1 !state n+1	 (needed for IF2 timestepping)
   type(system_state)                                          ::state
-
+  type(system_state)                                          ::state_nm1 !state n-1	(needed for ABBDF3)	
+  type(system_state)                                          ::state_nm2 !state n-2
 contains
 
 
@@ -204,8 +204,6 @@ contains
       state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
       state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
     end if
-
-
 
   end subroutine
 

@@ -1,7 +1,7 @@
 module const
 	! constants-module: contains simulation wide constants of parameter type
   !if variables are not flagged parameter, they may be temporarily changed (e.g. stepwidth)
-	use ISO_C_BINDING 
+  use ISO_C_BINDING 
   use omp_lib
   implicit none
 	include "fftw3.f03"
@@ -12,8 +12,8 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 256 
-	integer(kind=ip),parameter		:: ydim	        = 256   
+	integer(kind=ip),parameter		:: xdim	        = 512 
+	integer(kind=ip),parameter		:: ydim	        = 512   
 
 	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 300 ! maximum no of output files per type
@@ -31,8 +31,8 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter			:: tmax                    = 50.0_rp
-	real(kind = rp)					      :: dt 	                   = 5.0e-4_rp
+	real(kind = rp),parameter			      :: tmax                      = 50.0_rp
+	real(kind = rp)					      :: dt 	                   = 1.0e-4_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -50,8 +50,17 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 0.01_rp
-  integer(kind = ip)            :: shearing = 1
+	real(kind = rp),parameter			      :: a_0=  11.0_rp / 6.0_rp
+	real(kind = rp),parameter			      :: a_1=  -3.0_rp
+	real(kind = rp),parameter			      :: a_2=   3.0_rp / 2.0_rp
+	real(kind = rp),parameter			      :: a_3=  -1.0_rp / 3.0_rp
+
+	real(kind = rp),parameter			      :: b_0=   3.0_rp 
+	real(kind = rp),parameter			      :: b_1=  -3.0_rp
+	real(kind = rp),parameter			      :: b_2=   1.0_rp
+
+	real(kind = rp)               :: shear    = 0.00_rp
+        integer(kind = ip)            :: shearing = 0
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
   !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
@@ -76,14 +85,14 @@ module const
 
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.070_rp 
+	real(kind = rp),parameter                       :: D_visc   = 0.070_rp 
 	real(kind = rp),parameter			:: D_therm  = 0.02000_rp
 	real(kind = rp),parameter			:: D_comp   = 0.002_rp
 
-	real(kind = rp),parameter			:: B_therm  = 0.5_rp
-	real(kind = rp),parameter			:: B_comp   = 1.0_rp
+	real(kind = rp),parameter			:: B_therm  = 1.1_rp
+	real(kind = rp),parameter			:: B_comp   = 2.0_rp
 
-	real(kind = rp),parameter			:: S_therm  = 0.2_rp  
-	real(kind = rp),parameter			:: S_comp   = 0.1_rp 
+	real(kind = rp),parameter			:: S_therm  = 2.0_rp  
+	real(kind = rp),parameter			:: S_comp   = 1.0_rp 
 
 end module

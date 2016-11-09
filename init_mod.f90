@@ -144,7 +144,7 @@ use const
     call cpu_time(bm_timestepping_endtime)
     call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
     write(*,*) '______________________________________________________'
-    write(*,*) 'ETD2_step step took:', bm_timestepping_time
+    write(*,*) 'IF2_step step took:', bm_timestepping_time
     if(int(bm_step_time*real(steps))>=3600) then
       write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
                             int(3600))/60,'min'

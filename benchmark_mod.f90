@@ -22,6 +22,14 @@ real(kind = rp)               :: bm_timestepping_starttime
 real(kind = rp)               :: bm_timestepping_endtime
 real(kind = rp)               :: bm_timestepping_time
 
+real(kind = rp)               :: bm_set_ik_bar_starttime
+real(kind = rp)               :: bm_set_ik_bar_endtime
+real(kind = rp)               :: bm_set_ik_bar_time
+
+real(kind = rp)               :: bm_dealiase_starttime
+real(kind = rp)               :: bm_dealiase_endtime
+real(kind = rp)               :: bm_dealiase_time
+
 real(kind = rp)               :: bm_fu_starttime
 real(kind = rp)               :: bm_fu_endtime
 
@@ -90,6 +98,8 @@ subroutine bm_evaluate(write_to_console)
   bm_fu_buo_time    =     bm_fu_buo_endtime-bm_fu_buo_starttime
   bm_fu_diff_time    =     bm_fu_diff_endtime-bm_fu_diff_starttime
   bm_fu_shear_time    =     bm_fu_shear_endtime-bm_fu_shear_starttime
+  bm_set_ik_bar_time =     bm_set_ik_bar_endtime-bm_set_ik_bar_starttime
+  bm_dealiase_time =     bm_dealiase_endtime-bm_dealiase_starttime
 
   bm_ft_time    =         bm_ft_endtime-bm_ft_starttime
   bm_ft_N_time    =         bm_ft_N_endtime-bm_ft_N_starttime
@@ -143,6 +153,9 @@ subroutine bm_evaluate(write_to_console)
   write(*,*) '_______________________________Trafo__________________________________________'
   write(*,*) '    -single trafo          :',bm_trafo_time,'sec,',int(100.0_rp*bm_trafo_time/bm_step_time),'%'
   write(*,*) 'percent unnacounted        :',1.0_rp - (bm_statwrite_time+bm_filewrite_time+bm_timestepping_time)/bm_step_time,'%'
+  write(*,*) '_______________________________Trafo__________________________________________'
+  write(*,*) '    -dealiasing            :',bm_dealiase_time,'sec'
+  write(*,*) '    -set_ik_bar		 :',bm_set_ik_bar_time,'sec'
   ! note that ft and fc will take the same ammount of computing time
   end if
 end subroutine

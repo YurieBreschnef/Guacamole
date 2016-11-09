@@ -20,32 +20,38 @@ module trafo
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in) :: arr_f
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: dealiase_field
     !---------------------1/3rd rule------------------------------------------------------------
+    if(benchmarking ==1) bm_dealiase_starttime=  omp_get_wtime()
+
     dealiase_field = arr_f
+
     do i=xdim/3,2*(xdim/3)+1
-		  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
-	  end do
+	  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
+    end do
+
     do j=ydim/3,2*(ydim/3)+1
-		  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
-	  end do	
+	  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
+    end do	
 
-    ! set all modes to zero in brucker space which can not be resolved on the real space grid
-    do i =0,xdim-1 
-      do j =0,ydim-1 
-        if((aimag(state%iky_bar%val(i,j)) >= ky_max).OR.(aimag(state%iky_bar%val(i,j)) <=ky_min)) then
-        dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
-        end if
-      end do
-    end do
+   if(shearing ==1) then
 
-    ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
-    do i =0,xdim-1 
-      do j =0,ydim-1 
-        if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
-            .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
-        dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
-        end if
+      do i =0,xdim-1 
+        do j =0,ydim-1 
+
+          ! set all modes to zero in brucker space which can not be resolved on the real space grid
+          if((aimag(state%iky_bar%val(i,j)) >= ky_max).OR.(aimag(state%iky_bar%val(i,j)) <=ky_min)) then
+          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+          end if
+
+          ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
+          if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
+              .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
+          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+          end if
+        end do
       end do
-    end do
+   end if
+
+    if(benchmarking ==1) bm_dealiase_endtime=  omp_get_wtime()
 end function
 
 
