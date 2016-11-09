@@ -200,7 +200,7 @@ subroutine ABBDF3_step()
     if(benchmarking ==1) bm_set_ik_bar_starttime=  omp_get_wtime()
     call set_ik_bar(sheartime)
     if(benchmarking ==1) bm_set_ik_bar_endtime=  omp_get_wtime()
-
+    call set_ik_bar(sheartime)
     state%t           = state%t     +dt
     state%step        = state%step  +1
     !write(*,*) 'sub ABBDF3: make timestep, current step:', state%step
