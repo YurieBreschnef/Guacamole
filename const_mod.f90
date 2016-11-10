@@ -12,10 +12,10 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 512 
-	integer(kind=ip),parameter		:: ydim	        = 512   
+	integer(kind=ip),parameter		:: xdim	        = 256 
+	integer(kind=ip),parameter		:: ydim	        = 256   
 
-	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
+	integer(kind = ip),parameter	:: seed 		    = 111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 300 ! maximum no of output files per type
 	integer(kind = ip),parameter	:: measure_every= 50 ! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
@@ -32,7 +32,7 @@ module const
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter			      :: tmax                      = 50.0_rp
-	real(kind = rp)					      :: dt 	                   = 1.0e-4_rp
+	real(kind = rp)					      :: dt 	                   = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -59,8 +59,8 @@ module const
 	real(kind = rp),parameter			      :: b_1=  -3.0_rp
 	real(kind = rp),parameter			      :: b_2=   1.0_rp
 
-	real(kind = rp)               :: shear    = 0.00_rp
-        integer(kind = ip)            :: shearing = 0
+	real(kind = rp)               :: shear    = 0.05_rp
+        integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
   !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
@@ -85,9 +85,9 @@ module const
 
 
 
-	real(kind = rp),parameter                       :: D_visc   = 0.070_rp 
-	real(kind = rp),parameter			:: D_therm  = 0.02000_rp
-	real(kind = rp),parameter			:: D_comp   = 0.002_rp
+	real(kind = rp),parameter                       :: D_visc   = 1.0_rp*0.070_rp 
+	real(kind = rp),parameter			:: D_therm  = 1.0_rp*0.01000_rp
+	real(kind = rp),parameter			:: D_comp   = 1.0_rp*0.0001_rp
 
 	real(kind = rp),parameter			:: B_therm  = 1.1_rp
 	real(kind = rp),parameter			:: B_comp   = 2.0_rp

@@ -150,7 +150,7 @@ subroutine IF2_step()
   state%u_f%val   =state%u_f%val    *u_exp_mqh + dt_2*(u_RHS_n*u_exp_mqh + u_RHS_np1)
   state%temp_f%val=state%temp_f%val *t_exp_mqh + dt_2*(t_RHS_n*t_exp_mqh + t_RHS_np1)
   state%chem_f%val=state%chem_f%val *c_exp_mqh + dt_2*(c_RHS_n*c_exp_mqh + c_RHS_np1)
-  !call dealiase_all()
+  call dealiase_all()
   sheartime = sheartime+dt
   call set_ik_bar(sheartime)
   state%t           = state%t     +dt
