@@ -87,7 +87,7 @@ module const
 
 	real(kind = rp),parameter                       :: D_visc   = 1.0_rp*0.070_rp 
 	real(kind = rp),parameter			:: D_therm  = 1.0_rp*0.01000_rp
-	real(kind = rp),parameter			:: D_comp   = 1.0_rp*0.0001_rp
+	real(kind = rp),parameter			:: D_comp   = 1.0_rp*0.002_rp
 
 	real(kind = rp),parameter			:: B_therm  = 1.1_rp
 	real(kind = rp),parameter			:: B_comp   = 2.0_rp
