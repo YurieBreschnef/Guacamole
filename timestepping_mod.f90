@@ -119,19 +119,27 @@ subroutine IF2_step()
   if(remapping==1 .AND.shearing==1.) then
     call remap_stepwise()
   end if
-  ! set q-values for exponent, note the minus sign in iki_sqr
-  u_q(:,:,1) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
-  u_q(:,:,2) = real(-D_visc  *state%iki_bar_sqr%val(:,:),rp)
-  t_q        = real(-D_therm *state%iki_bar_sqr%val,rp)
-  c_q        = real(-D_comp  *state%iki_bar_sqr%val,rp)
-  ! calc exponentials for multiplication
-  u_exp_qh = real(exp(u_q*dt),rp)
-  t_exp_qh = real(exp(t_q*dt),rp)
-  c_exp_qh = real(exp(c_q*dt),rp)
-  ! with minus in exponent for timestep
-  u_exp_mqh = real(exp(-u_q*dt),rp)
-  t_exp_mqh = real(exp(-t_q*dt),rp)
-  c_exp_mqh = real(exp(-c_q*dt),rp)
+  !$omp parallel &
+  !$omp private (i,j)
+  !$omp do
+  do i =0,xdim-1
+    do j =0,ydim-1
+    ! set q-values for exponent, note the minus sign in iki_sqr
+    u_q(i,j,:) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
+    t_q(i,j)   = real(-D_therm*state%iki_bar_sqr%val(i,j),rp)
+    c_q(i,j)   = real(-D_comp *state%iki_bar_sqr%val(i,j),rp)
+    ! calc exponentials for multiplication
+    u_exp_qh(i,j,:) = real(exp(u_q(i,j,:)*dt),rp)
+    t_exp_qh(i,j)   = real(exp(t_q(i,j)*dt),rp)
+    c_exp_qh(i,j)   = real(exp(c_q(i,j)*dt),rp)
+    ! with minus in exponent for timestep
+    u_exp_mqh(i,j,:) = real(exp(-u_q(i,j,:)*dt),rp)
+    t_exp_mqh(i,j)   = real(exp(-t_q(i,j)*dt),rp)
+    c_exp_mqh(i,j)   = real(exp(-c_q(i,j)*dt),rp)
+    end do
+  end do
+  !$omp end do
+  !$omp end parallel
   ! calc  RHS_n and RHS_np1 (read as n plus one)
   u_RHS_n   = fu_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh,state%chem_f%val*c_exp_qh,sheartime)
   t_RHS_n   = ft_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh                          ,sheartime)
@@ -147,9 +155,18 @@ subroutine IF2_step()
                   ,state%chem_f%val*c_exp_qh +dt*c_RHS_n  &
                   ,sheartime+dt)
   ! make step
-  state%u_f%val   =state%u_f%val    *u_exp_mqh + dt_2*(u_RHS_n*u_exp_mqh + u_RHS_np1)
-  state%temp_f%val=state%temp_f%val *t_exp_mqh + dt_2*(t_RHS_n*t_exp_mqh + t_RHS_np1)
-  state%chem_f%val=state%chem_f%val *c_exp_mqh + dt_2*(c_RHS_n*c_exp_mqh + c_RHS_np1)
+  !$omp parallel &
+  !$omp private (i,j)
+  !$omp do
+  do i =0,xdim-1
+    do j =0,ydim-1
+    state%u_f%val(i,j,:)   =state%u_f%val(i,j,:)  *u_exp_mqh(i,j,:) + dt_2*(u_RHS_n(i,j,:)*u_exp_mqh(i,j,:) + u_RHS_np1(i,j,:))
+    state%temp_f%val(i,j)  =state%temp_f%val(i,j) *t_exp_mqh(i,j)   + dt_2*(t_RHS_n(i,j)  *t_exp_mqh(i,j)   + t_RHS_np1(i,j))
+    state%chem_f%val(i,j)  =state%chem_f%val(i,j) *c_exp_mqh(i,j)   + dt_2*(c_RHS_n(i,j)  *c_exp_mqh(i,j)   + c_RHS_np1(i,j))
+    end do
+  end do
+  !$omp end do
+  !$omp end parallel
   call dealiase_all()
   sheartime = sheartime+dt
   call set_ik_bar(sheartime)
