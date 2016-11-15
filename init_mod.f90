@@ -1,5 +1,6 @@
 module init
   !module for all actions to be happening at program start
+  !data initialisation, openmp init, fftw init etc.
 use const
   use sys_state
   use timestepping
@@ -8,35 +9,37 @@ use const
   implicit none
 
   contains
+
   subroutine init_all()
     !call all special init subroutines  and initialize some variables
-    call srand(seed)
     if(debuglevel .GE. 1) write(*,*) '-calling init_all()'
-  	state%t	 	    = 0.00_rp
-  	dt_2 	        = dt/2.0_rp
-  	steps       	= int(tmax/dt,ip)
-  	state%step    = 0
-    T_rm          = real(Lx/(shear*Ly),rp)
-    threads = omp_get_max_threads ( )     ! find out on how many threads this prog is running
-    !threads = 1
+    !init random numbers with seed defined in const_mod
+    call srand(seed)
+    state%t		= 0.00_rp
+    dt_2		= dt/2.0_rp
+    steps		= int(tmax/dt,ip)
+    state%step          = 0
+    T_rm                = real(Lx/(shear*Ly),rp)
+
+    ! find out on how many threads this prog is running (might be overridden by EXPORT_NUM_TRHEADS in doit.sh)
+    threads = omp_get_max_threads ( )   
     my_thread_id= omp_get_thread_num ( )
     write ( *, '(a,i8)' ) 'The number of processors available = ', omp_get_num_procs ( )
     write ( *, '(a,i8)' ) 'The number of threads available    = ', threads 
-
-    call init_plans()   
+    ! init fftw plans:
     ! ALWAYS INITIALIZE PLANS BEFORE THE ARRAY, since the fftw planning routines overwrite
     ! the input arrays to estimate the best plan execution
+    call init_plans()   
     call init_u()
     call init_temp()
     call init_chem()
     call init_k()
     call init_plausibility()
-    
-    ! TODO write sub to accomodate old state initiation 
     if(debuglevel .GE. 1) write(*,*) '-done with init_all.'
   end subroutine
 
   subroutine init_plausibility
+    ! checks for several measures of plausibility
     if(debuglevel .GE. 1) write(*,*) '_________Plausibility___________________________________'
     if ((B_therm*S_therm-B_comp*s_comp)>=0) then
       if(debuglevel .GE. 1) write(*,*) '-Stable stratification with total density gradient of:',(B_therm*S_therm-B_comp*s_comp)
@@ -112,33 +115,36 @@ use const
     benchmarking =1
     state_np1 = state  
     call RK4_step()   ! to not compare the first writing step  with the second nonwriting
-    call cpu_time(bm_timestepping_starttime)
-    call RK4_step()
-    call cpu_time(bm_timestepping_endtime)
-    call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
-    write(*,*) 'RK4 step took:', bm_timestepping_time
-    if(int(bm_step_time*real(steps))>=3600) then
-      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
-                            int(3600))/60,'min'
-    else
-      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
-            mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
-    end if
-    !----------------------------------------------------------------------------------------
-    call cpu_time(bm_timestepping_starttime)
-    call euler_step()
-    call cpu_time(bm_timestepping_endtime)
-    call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
-    write(*,*) '______________________________________________________'
-    write(*,*) 'EULER step took:', bm_timestepping_time
-    if(int(bm_step_time*real(steps))>=3600) then
-      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
-                            int(3600))/60,'min'
-    else
-      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
-            mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
-    end if
-    !----------------------------------------------------------------------------------------
+
+    !-----RK4-----------------------------------------------------------------------------------
+    !call cpu_time(bm_timestepping_starttime)
+    !call RK4_step()
+    !call cpu_time(bm_timestepping_endtime)
+    !call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
+    !write(*,*) 'RK4 step took:', bm_timestepping_time
+    !if(int(bm_step_time*real(steps))>=3600) then
+    !  write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
+    !                        int(3600))/60,'min'
+    !else
+    !  write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
+    !        mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
+    !end if
+
+    !----EULER------------------------------------------------------------------------------------
+    !call cpu_time(bm_timestepping_starttime)
+    !call euler_step()
+    !call cpu_time(bm_timestepping_endtime)
+    !call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
+    !write(*,*) '______________________________________________________'
+    !write(*,*) 'EULER step took:', bm_timestepping_time
+    !if(int(bm_step_time*real(steps))>=3600) then
+    !  write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
+    !                        int(3600))/60,'min'
+    !else
+    !  write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
+    !        mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
+    !end if
+    !----IF2------------------------------------------------------------------------------------
     call cpu_time(bm_timestepping_starttime)
     call IF2_step()
     call cpu_time(bm_timestepping_endtime)
@@ -165,15 +171,15 @@ use const
     !call fftw_plan_with_nthreads(no_of_threads);
     if(debuglevel .GE. 1) write(*,*) '  -calling init_plans()'
 
-  	call dfftw_plan_dft_1d( x_xf,xdim,x_pen	,x_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
-  	call dfftw_plan_dft_1d( y_yf,ydim,y_pen	,y_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
+	call dfftw_plan_dft_1d( x_xf,xdim,x_pen	,x_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
+	call dfftw_plan_dft_1d( y_yf,ydim,y_pen	,y_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
 
-  	call dfftw_plan_dft_1d( xf_x,xdim,x_pen_f	,x_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
-  	call dfftw_plan_dft_1d( yf_y,ydim,y_pen_f	,y_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
+	call dfftw_plan_dft_1d( xf_x,xdim,x_pen_f	,x_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
+	call dfftw_plan_dft_1d( yf_y,ydim,y_pen_f	,y_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
 
-  	call dfftw_plan_dft_2d(ifull2D,xdim,ydim,state%temp_f%val,state%temp%val,  &
+	call dfftw_plan_dft_2d(ifull2D,xdim,ydim,state%temp_f%val,state%temp%val,  &
       FFTW_BACKWARD,fftw_plan_thoroughness)
-  	call dfftw_plan_dft_2d( full2D,xdim,ydim,state%temp%val,state%temp_f%val, &
+	call dfftw_plan_dft_2d( full2D,xdim,ydim,state%temp%val,state%temp_f%val, &
       FFTW_FORWARD ,fftw_plan_thoroughness)
 
     if(debuglevel <= 1) write(*,*) '  -done with init_plans.'

@@ -5,8 +5,8 @@ load './gnuplot-palettes-master/jet.pal'
 aspect_ratio = 1
 Lx = 2.0*3.14159 
 Ly = 2.0*3.14159  
-xdim = 64 
-ydim = 64 
+xdim = 256 
+ydim = 256 
 
 
 max_spec_order = 0
@@ -45,7 +45,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,4
-#    set xrange [0.0:28.00]
+    #set xrange [0.0:20.00]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 with lines lw 3 title "max temp"  , \
@@ -85,9 +85,9 @@ no_of_img = 299
              './data/u_stat/u_stat.dat' using 2:16 with lines lw 3 title "std-dev v"   ,\
              './data/u_stat/u_stat.dat' using 2:17 with lines lw 3 title "variance v"  
         set title 'simulation time [arb] vs. E_kin [arb]'
-        plot './data/E_stat/E_stat.dat' using 2:3 with lines lw 3 title "E_{kin}"   ,\
-             './data/E_stat/E_stat.dat' using 2:4 with lines lw 3 title "E_{pot}"   ,\
-             './data/E_stat/E_stat.dat' using 2:5 with lines lw 3 title "E_{tot}"  
+        plot './data/E_stat/E_stat.dat' using 2:(log($3)) with lines lw 3 title "log(E_{kin})"   ,\
+             './data/E_stat/E_stat.dat' using 2:(log($4)) with lines lw 3 title "log(E_{pot})"   ,\
+             './data/E_stat/E_stat.dat' using 2:(log($5)) with lines lw 3 title "log(E_{tot})"  
         set title 'simulation time vs. shearstrength '
         plot './data/sys_stat/sys_stat.dat' using 2:4 with lines title "shear strength [arb]"
 
@@ -309,6 +309,8 @@ do for [i=0:no_of_img] {
     unset yrange
     set xtics
     set ytics
+
+    set xrange [0.0:64.0]
   	set title 'log(energy) vs wavenumber k [arb]'
    	plot './data/k_spec/'.i.'.spec.dat' using 2:3 with lines notitle
 

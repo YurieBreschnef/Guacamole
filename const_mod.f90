@@ -1,18 +1,19 @@
 module const
 ! constants-module: contains simulation wide constants of parameter type
-  !if variables are not flagged parameter, they may be temporarily changed (e.g. stepwidth)
+! if variables are not flagged parameter, they may be temporarily changed (e.g. stepwidth)
+! numerical parameters are also given here.
   use ISO_C_BINDING 
   use omp_lib
   implicit none
 include "fftw3.f03"
 integer,parameter				::rp			= 8			!real-precision
-integer,parameter				::real_outp_precision	= 4			!output precision
+integer,parameter				::real_outp_precision	= 4			!output number precision
 integer,parameter				::ip			= 4			!integer-precision
 
 	integer,parameter			::fftw_plan_thoroughness= FFTW_MEASURE
 	! possible also FFTW_MEASURE
-	integer(kind=ip),parameter		::xdim			= 256 
-	integer(kind=ip),parameter		::ydim			= 256   
+	integer(kind=ip),parameter		::xdim			= 512 
+	integer(kind=ip),parameter		::ydim			= 512   
 
 	integer(kind = ip),parameter		::seed			= 111	! seed for random init
 	integer(kind = ip),parameter		::maxfiles		= 300 ! maximum no of output files per type
@@ -49,7 +50,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp),parameter			      :: a_0=  11.0_rp / 6.0_rp
+	real(kind = rp),parameter			      :: a_0=  11.0_rp / 6.0_rp ! used for ABBDF3
 	real(kind = rp),parameter			      :: a_1=  -3.0_rp
 	real(kind = rp),parameter			      :: a_2=   3.0_rp / 2.0_rp
 	real(kind = rp),parameter			      :: a_3=  -1.0_rp / 3.0_rp
@@ -58,11 +59,12 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp),parameter			      :: b_1=  -3.0_rp
 	real(kind = rp),parameter			      :: b_2=   1.0_rp
 
+        !shear related parameters
 	real(kind = rp)               :: shear    = 0.05_rp
         integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
-  !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
+        !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
 	real(kind = rp)					      :: ky_max 
 	real(kind = rp)					      :: ky_min
 	real(kind = rp)					      :: kx_max 

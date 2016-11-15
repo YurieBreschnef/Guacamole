@@ -20,6 +20,9 @@ main.f90 \
 -fopenmp \
 -lm \
 -O3 \
--g \
 || { echo 'bash: ----COMPILATION FAILED----' ; exit 1;  }
 echo "bash: compilation...	 done"
+
+
+
+#-g \

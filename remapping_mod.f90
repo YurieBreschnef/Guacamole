@@ -1,4 +1,5 @@
 module remap
+!conducts remapping of sheared fourier space according to brucker(2007)
 use const
 use sys_state
 use trafo

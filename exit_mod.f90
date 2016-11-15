@@ -1,5 +1,6 @@
 module exit_mod
   !module for all actions to be happening at program end
+  !this is the place and time for proper disposal/deallocation
   use const
   use sys_state
   use plans

@@ -1,4 +1,11 @@
 module benchmark
+! measures the execution time of different parts of the program. This output can be switched on by the const
+! "benchmarking" in the const_mod 
+!
+! usage: write variables by adding lines:
+!     if(benchmarking ==1) bm_SUBROUTINE_starttime=  omp_get_wtime()
+!     if(benchmarking ==1) bm_SUBROUTINE_endtime  =  omp_get_wtime()
+! add substraction and output at base of this module
 use const
 use sys_state
 

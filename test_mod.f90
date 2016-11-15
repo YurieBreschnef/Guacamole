@@ -1,7 +1,6 @@
 module test
-  !Module is used for system tests, subroutine tests and physicality checks. everything that
+  !module is used for system tests, subroutine tests and physicality checks. everything that
   !makes sure the program is running correctly goes in here 
-  ! TODO: add test for flat case (zdim<4)
   ! TODO: add sub to compare pencil-decomp and fftw3D trafo
   ! TODO: add tests for pdgl-terms  (diff etc.)
   use const
@@ -26,7 +25,7 @@ module test
 
   subroutine NAN_check(caller)
     !checks a given system state for NAN's ; caller should look like "subroutine blabla"
-    !or "function foobar"
+    !or "function foobar", very recource intensive, handle with care
 	character(*),intent(inout) 		  					:: caller
     IF(ANY(IsNaN(real(state%u%val))))       write(*,*) caller,': NAN detected in array u '
     IF(ANY(IsNaN(real(state%u_f%val))))     write(*,*) caller,': NAN detected in array u_f '
@@ -38,6 +37,7 @@ module test
 
 
  subroutine div_tester()
+    ! tests divergence
     type(system_state)    :: init_dummy
     type(sfield)          :: int_dummy_f
     type(sfield)          :: int_dummy

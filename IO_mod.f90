@@ -1,4 +1,6 @@
 module IO_mod
+  ! main input/output module. add output routine either to write_all() which is invoked every writestep, or invoke
+  ! manually. some outputs are very recource intensive.
   use sys_state
   use plans
   use nabla
@@ -14,33 +16,25 @@ module IO_mod
     call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
     call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
     call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
-
     call write_u()
     call write_abs_u()
-
     call write_chem()
     call write_temp()
     call write_buo()
-
-
     call write_div()
     call write_vort()
-
     call write_u_f()
     call write_k_spec()
-
     call write_chem_f()
     call write_chem_f_remap()
     call write_temp_f()
     call write_temp_f_remap()
-
     call write_u_stat()     ! u-relatetd measures
     call write_fu_stat()    ! pdgl-relatetd measures (influences of terms)
     call write_E_stat()     ! Energy related measures
     call write_T_stat()     ! Energy related measures
     call write_C_stat()     ! Energy related measures
     call write_sys_stat()   ! System wide measures
-
     !if(debuglevel <= 2) write(*,*) '-done with write_all.'
   end subroutine
   subroutine write_vort()

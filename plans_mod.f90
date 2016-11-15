@@ -1,7 +1,7 @@
 module plans
-	!plans- module: holds fftw-plans for program wide use
+  ! plans- module: holds fftw-plans for program wide use
   ! integer types are plans for FFTW library
-	use const
+  use const
   implicit none
 
 	integer( kind= 8)										      :: x_xf				! convert x pencil to xf

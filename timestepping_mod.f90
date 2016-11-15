@@ -144,6 +144,7 @@ subroutine IF2_step()
   u_RHS_n   = fu_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh,state%chem_f%val*c_exp_qh,sheartime)
   t_RHS_n   = ft_N(state%u_f%val*u_exp_qh,state%temp_f%val*t_exp_qh                          ,sheartime)
   c_RHS_n   = fc_N(state%u_f%val*u_exp_qh                          ,state%chem_f%val*c_exp_qh,sheartime)
+
   u_RHS_np1 = fu_N(state%u_f%val*u_exp_qh+dt*u_RHS_n      &
                   ,state%temp_f%val*t_exp_qh +dt*t_RHS_n  &
                   ,state%chem_f%val*c_exp_qh +dt*c_RHS_n  &
@@ -156,7 +157,7 @@ subroutine IF2_step()
                   ,sheartime+dt)
   ! make step
   !$omp parallel &
-  !$omp private (i,j)
+  !$omp private (i)
   !$omp do
   do i =0,xdim-1
     do j =0,ydim-1

@@ -1,8 +1,14 @@
 module pdgl
   ! defines the evolution equations for the fields in fourier space:
-  ! du/dt = fu(...)
+  ! du/dt    = fu(...)
   ! dtemp/dt = ft(...)
   ! dchem/dt = fc(...)
+  ! for IF2-timestepping the rhs's are seperated into linear and nonlinear part
+  ! du/dt    = fu_L(...)  +  fu_N(...)
+  ! dtemp/dt = ft_L(...)  +  ft_N(...)
+  ! dchem/dt = fc_L(...)  +  fc_N(...)
+  !
+  ! TODO: fix redundancy of CHEM and TEMP field (identical eq, except for parameters)
   use sys_state
   use plans
   use trafo
@@ -53,6 +59,7 @@ function fu_N(u_f,temp_f,chem_f,t)
   !nonlinear operator of function fu = L+ N
   !maybe used for ETD
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_N
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_dummy
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
@@ -69,10 +76,21 @@ function fu_N(u_f,temp_f,chem_f,t)
   !end if
 
   call set_ik_bar(t)
-  !fu_N = cmplx(0.0_rp,0.0_rp,rp)
-  !fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
-  !fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
-  fu_N = fu_Nuk(u_f,t) + fu_buo(u_f,temp_f,chem_f,t)
+  !fu_N = fu_Nuk(u_f,t) + fu_buo(u_f,temp_f,chem_f,t)
+  !----------------------
+  fu_N     =fu_Nuk(u_f,t)                 !Nonlinear part
+  fu_dummy =fu_buo(u_f,temp_f,chem_f,t)
+  !$omp parallel &
+  !$omp private (i,j)
+  !$omp do
+  do i = 0,xdim-1
+    do j = 0,ydim-1
+      fu_N(i,j,:) = fu_N(i,j,:) +fu_dummy(i,j,:) 
+    end do
+  end do
+  !$omp end do
+  !$omp end parallel
+  !-------------------------------------------------
   if(shearing==1) then
     fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
   end if

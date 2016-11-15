@@ -1,8 +1,24 @@
 program guacamole 
-  ! main program part, the main timestepping loop is implemented here, calling the actual
-  ! stepping routines in the timestepping_mod, and writing to files by calling write_all()
-  ! from IO_module.
-  ! periodic measures are taken according to parameter: measure_every in const_mod
+ !----------------------------------------------------------------------------------------
+ !  Copyright (C) 2016  Michael Wenske
+
+ !  This program is free software: you can redistribute it and/or modify
+ !  it under the terms of the GNU General Public License as published by
+ !  the Free Software Foundation, either version 3 of the License, or
+ !  (at your option) any later version.
+
+ !  This program is distributed in the hope that it will be useful,
+ !  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ !  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ !  GNU General Public License for more details.
+
+ !  You should have received a copy of the GNU General Public License
+ !  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ !----------------------------------------------------------------------------------------
+ ! main program , the main timestepping loop is implemented here, calling the actual
+ ! stepping routines in the timestepping_mod, and writing to files by calling write_all()
+ ! from IO_module.
+ ! periodic measures are taken according to parameter: measure_every in const_mod
 
   !use omp_lib
   use iso_c_binding
@@ -48,6 +64,11 @@ program guacamole
       call write_all()
       last_written = last_written+write_intervall
       if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
+      ! check for NAN's occasionally (recourse intensive):
+      IF(ANY(IsNaN(real(state%u_f%val))))  then
+        write(*,*) 'func crossp(): NAN detected in output array'
+        stop
+      end if
     end if 
     ! CONSOLE OUTPUT----------------------------------------------------------------------------
   	if((steps>=1000).AND.(mod(state%step,(steps/1000)).EQ.0)) then

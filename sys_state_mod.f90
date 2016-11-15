@@ -1,6 +1,6 @@
 module sys_state
   ! state-module: contains all information characterizing a system state at a given time
-  ! holds fields, current time and step
+  ! holds fields, current time and step as well as several helping variables (not super clean!)
   use const
   implicit none
 

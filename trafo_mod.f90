@@ -1,5 +1,6 @@
 module trafo
-  ! performs the fourier transforms
+  ! performs the fourier transforms, and some operations (dealiasing) in fourier space
+  ! transform is parallelized via pencil decomposition
   use sys_state
   use plans
   use benchmark
