@@ -24,9 +24,14 @@ module trafo
 
     dealiase_field = arr_f
 
+  !$omp parallel &
+  !$omp private (i)
+  !$omp do
     do i=xdim/3,2*(xdim/3)+1
 	  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
     end do
+  !$omp end do
+  !$omp end parallel
 
     do j=ydim/3,2*(ydim/3)+1
 	  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
@@ -34,6 +39,9 @@ module trafo
 
    if(shearing ==1) then
 
+  !$omp parallel &
+  !$omp private (i,j)
+  !$omp do
       do i =0,xdim-1 
         do j =0,ydim-1 
 
@@ -49,6 +57,8 @@ module trafo
           end if
         end do
       end do
+  !$omp end do
+  !$omp end parallel
    end if
 
     if(benchmarking ==1) bm_dealiase_endtime=  omp_get_wtime()
