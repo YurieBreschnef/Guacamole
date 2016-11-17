@@ -18,13 +18,10 @@ module pdgl
   
 contains
 !---------------------------Fu---------------------------------------------------------------
-!---------------------------Fu---------------------------------------------------------------
-!---------------------------Fu---------------------------------------------------------------
-function fu(u_f,u,temp_f,chem_f,t)
+function fu(u_f,temp_f,chem_f,t)
   !rhs equation for velocity field. is subdivided in several terms
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
@@ -32,7 +29,7 @@ function fu(u_f,u,temp_f,chem_f,t)
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
   call set_ik_bar(t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
-  fu = fu + fu_Nuk(u_f,u,t)                 !Nonlinear part
+  fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
   fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
@@ -58,21 +55,30 @@ function fu_L(u_f,t)
   !fu_L(:,:,2) = dealiase_field(fu_L(:,:,2))
 end function 
 !----------------------------------------
-function fu_N(u_f,u,temp_f,chem_f,t)
+function fu_N(u_f,temp_f,chem_f,t)
   !nonlinear operator of function fu = L+ N
   !maybe used for ETD
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_N
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_dummy
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
   if(benchmarking ==1) bm_fu_N_starttime=  omp_get_wtime()
+  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array u_f'
+  !end if
+  !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array chem_f'
+  !end if
+  !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
+  !  write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
+  !end if
+
   call set_ik_bar(t)
   !fu_N = fu_Nuk(u_f,t) + fu_buo(u_f,temp_f,chem_f,t)
   !----------------------
-  fu_N     =fu_Nuk(u_f,u,t)                 !Nonlinear part
+  fu_N     =fu_Nuk(u_f,t)                 !Nonlinear part
   fu_dummy =fu_buo(u_f,temp_f,chem_f,t)
   !$omp parallel &
   !$omp private (i,j)
@@ -196,10 +202,9 @@ function fu_buo(u_f,temp_f,chem_f,t)
   if(benchmarking ==1) bm_fu_buo_endtime=  omp_get_wtime()
 end function
 !----------------------------------------
-function fu_Nuk(u_f,u,t)
+function fu_Nuk(u_f,t)
   ! calculates the advection term of velocity evolution equation in fourier space
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u
   real(kind = rp)                                  ,intent(in) :: t
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_Nuk
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: Nuk_f
@@ -207,6 +212,7 @@ function fu_Nuk(u_f,u,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: omega_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: Nuk 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: div_Nuk_f
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u
   if(benchmarking ==1) bm_fu_Nuk_starttime=  omp_get_wtime()
   call set_ik_bar(t)
   !do crossproduct
@@ -214,6 +220,8 @@ function fu_Nuk(u_f,u,t)
 
   call transform(omega_f(:,:,1),omega(:,:,1),-1,shearing,t)
   call transform(omega_f(:,:,2),omega(:,:,2),-1,shearing,t)
+  call transform(u_f(:,:,1),u(:,:,1),-1,shearing,t)
+  call transform(u_f(:,:,2),u(:,:,2),-1,shearing,t)
 
   !do crossproduct
   Nuk = -crossp(omega,u)
@@ -254,8 +262,6 @@ function fu_Nuk(u_f,u,t)
   !fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
   if(benchmarking ==1) bm_fu_Nuk_endtime=  omp_get_wtime()
 end function
-!---------------------------F_temp------------------------------------------------------------
-!---------------------------F_temp------------------------------------------------------------
 !---------------------------F_temp------------------------------------------------------------
 
 function ft(u_f,temp_f,t)
@@ -390,8 +396,6 @@ function ft_strat(u_f,temp_f)
   ft_strat(:,:)  = -S_therm*u_f(:,:,2)
   if(benchmarking ==1) bm_ft_strat_endtime=  omp_get_wtime()
 end function
-!---------------------------F_chem------------------------------------------------------------
-!---------------------------F_chem------------------------------------------------------------
 !---------------------------F_chem------------------------------------------------------------
 function fc(u_f,chem_f,t)
   !rhs of compositional equation
@@ -538,105 +542,5 @@ function fc_strat(u_f,chem_f)
   if(benchmarking ==1) bm_fc_strat_starttime=  omp_get_wtime()
   fc_strat(:,:)  = -S_comp*u_f(:,:,2)
   if(benchmarking ==1) bm_fc_strat_endtime=  omp_get_wtime()
-end function
-!------------------BUO---------------------------------------------------------------
-!------------------BUO---------------------------------------------------------------
-!------------------BUO---------------------------------------------------------------
-function calc_buo(u_f,u,in_field,diff,buo,strat,t)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: calc_buo
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: in_field 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f,u
-  real(kind=rp),intent(in)                                   :: diff,buo,strat,t ! parameters
-
-   calc_buo= cmplx(0.0,0.0,rp)
-   calc_buo= calc_buo + buo_adv(u_f,u,in_field,t)            !ADVECTION
-   calc_buo= calc_buo + buo_diff(in_field,diff)              !DIFFUSION
-   calc_buo= calc_buo + buo_strat(u_f,strat)      !BACKGROUND STRATIFICATION
-   calc_buo= dealiase_field(calc_buo)
-end function
-!--------------------------------------
-function buo_L(in_field,diff,t)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_L
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: in_field
-  real(kind = rp),intent(in)                                   :: t,diff
-  call set_ik_bar(t)
-  buo_L = cmplx(0.0,0.0,rp)
-  buo_L = buo_L + buo_diff(in_field,diff)       !DIFFUSION
-  !buo_L = dealiase_field(buo_L)
-end function 
-!--------------------------------------
-function buo_N(u_f,u,in_field,buo,strat,t)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_N
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: in_field
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f,u
-  real(kind = rp),intent(in)                                   :: t,buo,strat
-  call set_ik_bar(t)
-  buo_N = cmplx(0.0,0.0,rp)
-  buo_N = buo_N + buo_adv(u_f,u,in_field,t)        !ADVECTION
-  buo_N = buo_N + buo_strat(u_f,strat)  !BACKGROUND stratification
-  buo_N(0,0) = cmplx(0.0,0.0,rp)                   ! set constant mode to zero
-end function 
-!--------------------------------------
-function buo_adv(u_f,u,in_field,t)
-  implicit none
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_adv
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: in_field
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f,u
-  real(kind = rp),intent(in)                                   :: t
-
-  call transform(in_field,state%s_dummy%val,-1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      !                                            buo* u          (realspace)
-      state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*u(i,j,1)
-      state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*u(i,j,2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-
-  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
-  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      ! advection 
-      buo_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
-                     +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-end function
-!--------------------------------------
-function buo_diff(in_field,diff)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_diff
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: in_field
-  real(kind = rp),intent(in)                                   :: diff
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-        buo_diff(i,j)  = diff*( state%iki_bar_sqr%val(i,j)*in_field(i,j))
-        !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-end function
-!--------------------------------------
-function buo_strat(u_f,strat)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_strat
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
-  real(kind = rp),intent(in)                                   :: strat
-  buo_strat(:,:)  = -strat*u_f(:,:,2)
 end function
 end module

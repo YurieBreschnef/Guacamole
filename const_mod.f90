@@ -12,8 +12,8 @@ integer,parameter				::ip			= 4			!integer-precision
 
 	integer,parameter			::fftw_plan_thoroughness= FFTW_MEASURE
 	! possible also FFTW_MEASURE
-	integer(kind=ip),parameter		::xdim			= 256 
-	integer(kind=ip),parameter		::ydim			= 256   
+	integer(kind=ip),parameter		::xdim			= 512 
+	integer(kind=ip),parameter		::ydim			= 512   
 
 	integer(kind = ip),parameter		::seed			= 111	! seed for random init
 	integer(kind = ip),parameter		::maxfiles		= 300 ! maximum no of output files per type
@@ -31,8 +31,8 @@ integer,parameter				::ip			= 4			!integer-precision
 	integer(kind = ip)				:: steps		
 	integer(kind = ip)				:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter			      :: tmax                      = 100.00_rp
-	real(kind = rp)					      :: dt			   = 1.0e-4_rp
+	real(kind = rp),parameter			      :: tmax                      = 100.0_rp
+	real(kind = rp)					      :: dt			   = 5.0e-4_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -60,7 +60,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp),parameter			      :: b_2=   1.0_rp
 
         !shear related parameters
-	real(kind = rp)               :: shear    = 0.20_rp
+	real(kind = rp)               :: shear    = 0.05_rp
         integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
