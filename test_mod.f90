@@ -66,7 +66,7 @@ module test
     b_maxdiv_before   = maxval(real(int1_dummy%val,real_outp_precision))
 
     !calc maxdiv after one euler step
-    state%u_f%val = state%u_f%val + fu(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime) *dummy_dt
+    state%u_f%val = state%u_f%val + fu(state%u_f%val,state%u%val,state%temp_f%val,state%chem_f%val,sheartime) *dummy_dt
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -89,7 +89,7 @@ module test
  
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val =  fu_Nuk(state%u_f%val,sheartime) *dummy_dt
+    state%u_f%val =  fu_Nuk(state%u_f%val,state%u%val,sheartime) *dummy_dt
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                           +state%iky%val(:,:)*state%u_f%val(:,:,2) 

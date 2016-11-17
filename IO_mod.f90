@@ -527,11 +527,11 @@ module IO_mod
 
 
     !fu
-    vdummy%val = fu(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime)
+    vdummy%val = fu(state%u_f%val,state%u%val,state%temp_f%val,state%chem_f%val,sheartime)
     fu_dummy%val = cmplx((real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
     fu_stats = measure_sfield_stats(fu_dummy)
     !fu_Nuk
-    vdummy%val = fu_Nuk(state%u_f%val,sheartime)
+    vdummy%val = fu_Nuk(state%u_f%val,state%u%val,sheartime)
     fu_Nuk_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
     fu_Nuk_stats = measure_sfield_stats(fu_Nuk_dummy)
     !fu_diff
