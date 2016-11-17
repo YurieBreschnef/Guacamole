@@ -1,4 +1,5 @@
 module remap
+!conducts remapping of sheared fourier space according to brucker(2007)
 use const
 use sys_state
 use trafo
@@ -20,7 +21,7 @@ subroutine remap_stepwise()
 end subroutine
 
 function remap_brucker(in_arr)
-  	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: in_arr,remap_brucker
+	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: in_arr,remap_brucker
     !remap_brucker = dealiase_field(in_arr)
     remap_brucker = in_arr
     if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
@@ -38,24 +39,39 @@ function remap_brucker(in_arr)
     !end do
     !----------------------------------------------------------------------------------------
     !STEP 1: Transform back to realspace in y-direction!
+      !$omp parallel &
+      !$omp private (i)
+      !$omp do
 	  do i=0,xdim-1
-	  	y_pen_f = remap_brucker(i,:)										
-      	call dfftw_execute_dft(yf_y,y_pen_f, y_pen)						
-	  	remap_brucker(i,:) = y_pen									
+		y_pen_f = remap_brucker(i,:)										
+	call dfftw_execute_dft(yf_y,y_pen_f, y_pen)						
+		remap_brucker(i,:) = y_pen									
 	  end do	
+      !$omp end do
+      !$omp end parallel
     !STEP 2: Phaseshift back to -T_rm/2.0_rp
-	 	do j=1,ydim-1							
-	         do i=0,xdim-1
-	 		    	!multiply the fourier spectrum with corresponding inverse phase factor
-	 		    	remap_brucker(i,j) = remap_brucker(i,j)*exp(-shear*(T_rm)*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-	 		    end do	
-	 	end do	
+      !$omp parallel &
+      !$omp private (i,j)
+      !$omp do
+	do j=1,ydim-1							
+	 do i=0,xdim-1
+			!multiply the fourier spectrum with corresponding inverse phase factor
+			remap_brucker(i,j) = remap_brucker(i,j)*exp(-shear*(T_rm)*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+		    end do	
+	end do	
+      !$omp end do
+      !$omp end parallel
     !STEP 3: transform to sheared Fourier-space on new base
+      !$omp parallel &
+      !$omp private (i)
+      !$omp do
 	  do i=0,xdim-1
-	  	y_pen = remap_brucker(i,:)									
-      	call dfftw_execute_dft(y_yf,y_pen, y_pen_f)					
-	  	remap_brucker(i,:) = y_pen_f/real(ydim,rp)			
+		y_pen = remap_brucker(i,:)									
+	call dfftw_execute_dft(y_yf,y_pen, y_pen_f)					
+		remap_brucker(i,:) = y_pen_f/real(ydim,rp)			
 	  end do	
+      !$omp end do
+      !$omp end parallel
     !----------------------------------------------------------------------------------------
     ! set regions to zero wich have been carried into the resolutable domain by remapping
     call set_ik_bar(-T_rm/2.0_rp)
@@ -78,17 +94,23 @@ end function
 
 subroutine surgery(patient)
     ! delete those parts of spectrum wich can not be resolved
-  	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(inout)            :: patient
+	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(inout)            :: patient
 
       call set_ik_bar(sheartime)
       ! set all modes in brucker space to zero which can't  be resolved on the real space grid
-      do i =0,xdim-1 
-        do j =0,ydim-1 
-          if((aimag(state%iky_bar%val(i,j)) > ky_max).OR.(aimag(state%iky_bar%val(i,j)) <ky_min)) then
-            patient(i,j) = cmplx(0.0_rp,0.0_rp)
-          end if
-        end do
-      end do
+      !$omp parallel &
+      !$omp private (i,j)
+      !$omp do
+          do i =0,xdim-1 
+            do j =0,ydim-1 
+              if((aimag(state%iky_bar%val(i,j)) > ky_max).OR.(aimag(state%iky_bar%val(i,j)) <ky_min)) then
+                patient(i,j) = cmplx(0.0_rp,0.0_rp)
+              end if
+            end do
+          end do
+      !$omp end do
+      !$omp end parallel
+
       !do i =0,xdim-1 
       !  do j =0,ydim-1 
       !    if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
