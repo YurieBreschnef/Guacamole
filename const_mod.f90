@@ -60,7 +60,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp),parameter			      :: b_2=   1.0_rp
 
         !shear related parameters
-	real(kind = rp)               :: shear    = 0.20_rp
+	real(kind = rp)               :: shear    = 0.050_rp
         integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
@@ -70,7 +70,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp)					      :: kx_max 
 	real(kind = rp)					      :: kx_min
   
-  integer(kind = ip)            :: benchmarking = 1
+  integer(kind = ip)            :: benchmarking = 0
 
   integer(kind = ip)             :: remapping = 1
   integer(kind = ip)             :: remapping_rate = 10 
@@ -89,9 +89,9 @@ integer,parameter				::ip			= 4			!integer-precision
   real(kind = rp),parameter			:: D_comp   = 1.0_rp*0.003_rp
   
   real(kind = rp),parameter			:: B_therm  = 1.1_rp
-  real(kind = rp),parameter			:: B_comp   = 2.0_rp
+  real(kind = rp),parameter			:: B_comp   = 1.0_rp
   
-  real(kind = rp),parameter			:: S_therm  = 2.0_rp  
+  real(kind = rp),parameter			:: S_therm  = 1.0_rp  
   real(kind = rp),parameter			:: S_comp   = 1.0_rp 
 
 	!real(kind = rp),parameter                       :: D_visc   = 1.0_rp*0.100_rp 

@@ -50,12 +50,14 @@ function fu_L(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_L
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp)                                  ,intent(in) :: t
+  if(benchmarking ==1) bm_fu_L_starttime=  omp_get_wtime()
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
   call set_ik_bar(t)
   fu_L = cmplx(0.0_rp,0.0_rp,rp)
   fu_L = fu_L + fu_diff(u_f,t)                !DIFFUSION
   !fu_L(:,:,1) = dealiase_field(fu_L(:,:,1))
   !fu_L(:,:,2) = dealiase_field(fu_L(:,:,2))
+  if(benchmarking ==1) bm_fu_L_endtime=  omp_get_wtime()
 end function 
 !----------------------------------------
 function fu_N(u_f,u,temp_f,chem_f,t)
@@ -258,287 +260,287 @@ end function
 !---------------------------F_temp------------------------------------------------------------
 !---------------------------F_temp------------------------------------------------------------
 
-function ft(u_f,temp_f,t)
-  !rhs of temp equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  real(kind = rp),intent(in)                                            :: t
-  if(benchmarking ==1) bm_ft_starttime=  omp_get_wtime()
-  call set_ik_bar(t)
-  ft = cmplx(0.0,0.0,rp)
-  ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
-  ft = ft + ft_diff(temp_f)           !DIFFUSION
-  ft = ft + ft_strat(u_f,temp_f)      !BACKGROUND STRATIFICATION
-  ft = dealiase_field(ft)
-  ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
-  if(benchmarking ==1) bm_ft_endtime=  omp_get_wtime()
-end function 
-!--------------------------------------
-function ft_L(temp_f,t)
-  !linear part of temp evolution equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_L
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
-  real(kind = rp),intent(in)                                   :: t
-  call set_ik_bar(t)
-  ft_L = cmplx(0.0,0.0,rp)
-  ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
-  !ft_L = dealiase_field(ft_L)
-end function 
-!--------------------------------------
-function ft_N(u_f,temp_f,t)
-  ! nonlinear part of temp evolution equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_N
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
-  real(kind = rp),intent(in)                                   :: t
-  if(benchmarking ==1) bm_ft_N_starttime=  omp_get_wtime()
-  call set_ik_bar(t)
-  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func ft_N(): WARNING: ALL ZEROES detected in input array u_f'
-  !end if
-  !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func ft_N(): WARNING ALL ZEROES detected in input array temp_f'
-  !end if
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-  !  write(*,*) 'func ft_N(): NAN detected in input array'
-  !  stop
-  !end if
-  ft_N = cmplx(0.0,0.0,rp)
-  ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
-  ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
-  ft_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
-  !ft_N = dealiase_field(ft_N)
-  !IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
-  if(benchmarking ==1) bm_ft_N_endtime=  omp_get_wtime()
-end function 
-!--------------------------------------
-function ft_adv(u_f,temp_f,t)
-  implicit none
-  ! temp advection term  [nabla dot (temp*u)]
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_adv
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  real(kind = rp),intent(in)                                   :: t
-  if(benchmarking ==1) bm_ft_adv_starttime=  omp_get_wtime()
-
-  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
-  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
-  call transform(temp_f,state%s_dummy%val,-1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      !                                            temp_f* u          (realspace)
-      state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*state%dummy%val(i,j,1)
-      state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*state%dummy%val(i,j,2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-
-  !now trafo temp*u back to fourier space
-  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
-  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      ! advection 
-        ft_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
-                  +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-  if(benchmarking ==1) bm_ft_adv_endtime=  omp_get_wtime()
-end function
-!--------------------------------------
-function ft_diff(temp_f)
-  ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  if(benchmarking ==1) bm_ft_diff_starttime=  omp_get_wtime()
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-        ft_diff(i,j)  = D_therm*( state%iki_bar_sqr%val(i,j)*temp_f(i,j))
-        !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-  !ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:))
-  if(benchmarking ==1) bm_ft_diff_endtime=  omp_get_wtime()
-end function
-!--------------------------------------
-function ft_strat(u_f,temp_f)
-  ! influence of chemical background stratification
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_strat
-  if(benchmarking ==1) bm_ft_strat_starttime=  omp_get_wtime()
-  ft_strat(:,:)  = -S_therm*u_f(:,:,2)
-  if(benchmarking ==1) bm_ft_strat_endtime=  omp_get_wtime()
-end function
-!---------------------------F_chem------------------------------------------------------------
-!---------------------------F_chem------------------------------------------------------------
-!---------------------------F_chem------------------------------------------------------------
-function fc(u_f,chem_f,t)
-  !rhs of compositional equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  real(kind = rp),intent(in)                                            :: t
-  if(benchmarking ==1) bm_fc_starttime=  omp_get_wtime()
-  call set_ik_bar(t)
-  fc = cmplx(0.0,0.0,rp)
-  fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
-  fc = fc + fc_diff(chem_f)           !DIFFUSION
-  fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
-  fc = dealiase_field(fc)
-
-  fc(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
-  !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
-  !  write(*,*) 'func fc(): all output values are zero! '
-  !  !stop
-  !end if
-  if(benchmarking ==1) bm_fc_endtime=  omp_get_wtime()
-end function 
-!--------------------------------------
-function fc_L(chem_f,t)
-  !linear part of chem evolution equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_L
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
-  real(kind = rp),intent(in)                                   :: t
-  call set_ik_bar(t)
-  !IF(ANY(IsNaN(real(chem_f))))  then
-  !  write(*,*) 'func fc_L(): NAN detected in input array'
-  !  stop
-  !end if
-  fc_L = cmplx(0.0,0.0,rp)
-  fc_L = fc_L + fc_diff(chem_f)       !DIFFUSION
-  !fc_L = dealiase_field(fc_L)
-end function 
-!--------------------------------------
-function fc_N(u_f,chem_f,t)
-  ! nonlinear part of chem evolution equation
-  !TODO make transforms as effective as possible
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_N
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
-  real(kind = rp),intent(in)                                   :: t
-  if(benchmarking ==1) bm_fc_N_starttime=  omp_get_wtime()
-  call set_ik_bar(t)
-  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func fc_N(): WARNING: ALL ZEROES detected in input array u_f'
-  !end if
-  !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func fc_N(): WARNING ALL ZEROES detected in input array chem_f'
-  !end if
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-  !  write(*,*) 'func fc_N(): NAN detected in input array'
-  !  stop
-  !end if
-  fc_N = cmplx(0.0,0.0,rp)
-  fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
-  fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
-  fc_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
-  !fc_N = dealiase_field(fc_N)
-  !IF(ALL((real(fc_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fc_N does not contribute to pdgl!'
-  if(benchmarking ==1) bm_fc_N_endtime=  omp_get_wtime()
-end function 
-!--------------------------------------
-function fc_adv(u_f,chem_f,t)
-  implicit none
-  ! chem advection term  [nabla dot (chem*u)]
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_adv
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
-  real(kind = rp),intent(in)                                   :: t
-  if(benchmarking ==1) bm_fc_adv_starttime=  omp_get_wtime()
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-  !  write(*,*) 'func fc_adv(): NAN detected in input array'
-  !  stop
-  !end if
-
-  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
-  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
-  call transform(chem_f,state%s_dummy%val,-1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      !                                            chem_f* u          (realspace)
-      state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*state%dummy%val(i,j,1)
-      state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*state%dummy%val(i,j,2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-
-  !now trafo chem*u back to fourier space
-  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
-  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-      ! advection 
-      fc_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
-                     +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-
-  if(benchmarking ==1) bm_fc_adv_endtime=  omp_get_wtime()
-end function
-!--------------------------------------
-function fc_diff(chem_f)
-  ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_diff
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  if(benchmarking ==1) bm_fc_diff_starttime=  omp_get_wtime()
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
-        fc_diff(i,j)  = D_comp*( state%iki_bar_sqr%val(i,j)*chem_f(i,j))
-        !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-      end do
-    end do
-  !$omp end do
-  !$omp end parallel
-  !fc_diff(:,:)  = D_comp*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
-  if(benchmarking ==1) bm_fc_diff_endtime=  omp_get_wtime()
-end function
-!--------------------------------------
-function fc_strat(u_f,chem_f)
-  ! influence of chemical background stratification
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_strat
-  if(benchmarking ==1) bm_fc_strat_starttime=  omp_get_wtime()
-  fc_strat(:,:)  = -S_comp*u_f(:,:,2)
-  if(benchmarking ==1) bm_fc_strat_endtime=  omp_get_wtime()
-end function
+!function ft(u_f,temp_f,t)
+!  !rhs of temp equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+!  real(kind = rp),intent(in)                                            :: t
+!  if(benchmarking ==1) bm_ft_starttime=  omp_get_wtime()
+!  call set_ik_bar(t)
+!  ft = cmplx(0.0,0.0,rp)
+!  ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
+!  ft = ft + ft_diff(temp_f)           !DIFFUSION
+!  ft = ft + ft_strat(u_f,temp_f)      !BACKGROUND STRATIFICATION
+!  ft = dealiase_field(ft)
+!  ft(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
+!  if(benchmarking ==1) bm_ft_endtime=  omp_get_wtime()
+!end function 
+!!--------------------------------------
+!function ft_L(temp_f,t)
+!  !linear part of temp evolution equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_L
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
+!  real(kind = rp),intent(in)                                   :: t
+!  call set_ik_bar(t)
+!  ft_L = cmplx(0.0,0.0,rp)
+!  ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
+!  !ft_L = dealiase_field(ft_L)
+!end function 
+!!--------------------------------------
+!function ft_N(u_f,temp_f,t)
+!  ! nonlinear part of temp evolution equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_N
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
+!  real(kind = rp),intent(in)                                   :: t
+!  if(benchmarking ==1) bm_ft_N_starttime=  omp_get_wtime()
+!  call set_ik_bar(t)
+!  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
+!  !  write(*,*) 'func ft_N(): WARNING: ALL ZEROES detected in input array u_f'
+!  !end if
+!  !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
+!  !  write(*,*) 'func ft_N(): WARNING ALL ZEROES detected in input array temp_f'
+!  !end if
+!  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+!  !  write(*,*) 'func ft_N(): NAN detected in input array'
+!  !  stop
+!  !end if
+!  ft_N = cmplx(0.0,0.0,rp)
+!  ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
+!  ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+!  ft_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
+!  !ft_N = dealiase_field(ft_N)
+!  !IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
+!  if(benchmarking ==1) bm_ft_N_endtime=  omp_get_wtime()
+!end function 
+!!--------------------------------------
+!function ft_adv(u_f,temp_f,t)
+!  implicit none
+!  ! temp advection term  [nabla dot (temp*u)]
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_adv
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+!  real(kind = rp),intent(in)                                   :: t
+!  if(benchmarking ==1) bm_ft_adv_starttime=  omp_get_wtime()
+!
+!  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
+!  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
+!  call transform(temp_f,state%s_dummy%val,-1,shearing,t)
+!
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!      !                                            temp_f* u          (realspace)
+!      state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*state%dummy%val(i,j,1)
+!      state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*state%dummy%val(i,j,2)
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!
+!  !now trafo temp*u back to fourier space
+!  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
+!  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
+!
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!      ! advection 
+!        ft_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
+!                  +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!  if(benchmarking ==1) bm_ft_adv_endtime=  omp_get_wtime()
+!end function
+!!--------------------------------------
+!function ft_diff(temp_f)
+!  ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+!  if(benchmarking ==1) bm_ft_diff_starttime=  omp_get_wtime()
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!        ft_diff(i,j)  = D_therm*( state%iki_bar_sqr%val(i,j)*temp_f(i,j))
+!        !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!  !ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:))
+!  if(benchmarking ==1) bm_ft_diff_endtime=  omp_get_wtime()
+!end function
+!!--------------------------------------
+!function ft_strat(u_f,temp_f)
+!  ! influence of chemical background stratification
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_strat
+!  if(benchmarking ==1) bm_ft_strat_starttime=  omp_get_wtime()
+!  ft_strat(:,:)  = -S_therm*u_f(:,:,2)
+!  if(benchmarking ==1) bm_ft_strat_endtime=  omp_get_wtime()
+!end function
+!!---------------------------F_chem------------------------------------------------------------
+!!---------------------------F_chem------------------------------------------------------------
+!!---------------------------F_chem------------------------------------------------------------
+!function fc(u_f,chem_f,t)
+!  !rhs of compositional equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+!  real(kind = rp),intent(in)                                            :: t
+!  if(benchmarking ==1) bm_fc_starttime=  omp_get_wtime()
+!  call set_ik_bar(t)
+!  fc = cmplx(0.0,0.0,rp)
+!  fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
+!  fc = fc + fc_diff(chem_f)           !DIFFUSION
+!  fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
+!  fc = dealiase_field(fc)
+!
+!  fc(0,0) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
+!  !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
+!  !  write(*,*) 'func fc(): all output values are zero! '
+!  !  !stop
+!  !end if
+!  if(benchmarking ==1) bm_fc_endtime=  omp_get_wtime()
+!end function 
+!!--------------------------------------
+!function fc_L(chem_f,t)
+!  !linear part of chem evolution equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_L
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
+!  real(kind = rp),intent(in)                                   :: t
+!  call set_ik_bar(t)
+!  !IF(ANY(IsNaN(real(chem_f))))  then
+!  !  write(*,*) 'func fc_L(): NAN detected in input array'
+!  !  stop
+!  !end if
+!  fc_L = cmplx(0.0,0.0,rp)
+!  fc_L = fc_L + fc_diff(chem_f)       !DIFFUSION
+!  !fc_L = dealiase_field(fc_L)
+!end function 
+!!--------------------------------------
+!function fc_N(u_f,chem_f,t)
+!  ! nonlinear part of chem evolution equation
+!  !TODO make transforms as effective as possible
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_N
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
+!  real(kind = rp),intent(in)                                   :: t
+!  if(benchmarking ==1) bm_fc_N_starttime=  omp_get_wtime()
+!  call set_ik_bar(t)
+!  !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
+!  !  write(*,*) 'func fc_N(): WARNING: ALL ZEROES detected in input array u_f'
+!  !end if
+!  !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
+!  !  write(*,*) 'func fc_N(): WARNING ALL ZEROES detected in input array chem_f'
+!  !end if
+!  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+!  !  write(*,*) 'func fc_N(): NAN detected in input array'
+!  !  stop
+!  !end if
+!  fc_N = cmplx(0.0,0.0,rp)
+!  fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
+!  fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
+!  fc_N(0,0) = cmplx(0.0,0.0,rp)       ! set constant mode to zero
+!  !fc_N = dealiase_field(fc_N)
+!  !IF(ALL((real(fc_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fc_N does not contribute to pdgl!'
+!  if(benchmarking ==1) bm_fc_N_endtime=  omp_get_wtime()
+!end function 
+!!--------------------------------------
+!function fc_adv(u_f,chem_f,t)
+!  implicit none
+!  ! chem advection term  [nabla dot (chem*u)]
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_adv
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+!  real(kind = rp),intent(in)                                   :: t
+!  if(benchmarking ==1) bm_fc_adv_starttime=  omp_get_wtime()
+!  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+!  !  write(*,*) 'func fc_adv(): NAN detected in input array'
+!  !  stop
+!  !end if
+!
+!  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
+!  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
+!  call transform(chem_f,state%s_dummy%val,-1,shearing,t)
+!
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!      !                                            chem_f* u          (realspace)
+!      state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*state%dummy%val(i,j,1)
+!      state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*state%dummy%val(i,j,2)
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!
+!  !now trafo chem*u back to fourier space
+!  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
+!  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
+!
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!      ! advection 
+!      fc_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
+!                     +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!
+!  if(benchmarking ==1) bm_fc_adv_endtime=  omp_get_wtime()
+!end function
+!!--------------------------------------
+!function fc_diff(chem_f)
+!  ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_diff
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
+!  if(benchmarking ==1) bm_fc_diff_starttime=  omp_get_wtime()
+!  !$omp parallel &
+!  !$omp private (i,j)
+!  !$omp do
+!    do i=0,xdim-1
+!      do j=0,ydim-1
+!        fc_diff(i,j)  = D_comp*( state%iki_bar_sqr%val(i,j)*chem_f(i,j))
+!        !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
+!      end do
+!    end do
+!  !$omp end do
+!  !$omp end parallel
+!  !fc_diff(:,:)  = D_comp*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
+!  if(benchmarking ==1) bm_fc_diff_endtime=  omp_get_wtime()
+!end function
+!!--------------------------------------
+!function fc_strat(u_f,chem_f)
+!  ! influence of chemical background stratification
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
+!  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_strat
+!  if(benchmarking ==1) bm_fc_strat_starttime=  omp_get_wtime()
+!  fc_strat(:,:)  = -S_comp*u_f(:,:,2)
+!  if(benchmarking ==1) bm_fc_strat_endtime=  omp_get_wtime()
+!end function
 !------------------BUO---------------------------------------------------------------
 !------------------BUO---------------------------------------------------------------
 !------------------BUO---------------------------------------------------------------
@@ -548,10 +550,12 @@ function calc_buo(u_f,u,in_field,diff,buo,strat,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f,u
   real(kind=rp),intent(in)                                   :: diff,buo,strat,t ! parameters
 
-   calc_buo= cmplx(0.0,0.0,rp)
-   calc_buo= calc_buo + buo_adv(u_f,u,in_field,t)            !ADVECTION
-   calc_buo= calc_buo + buo_diff(in_field,diff)              !DIFFUSION
-   calc_buo= calc_buo + buo_strat(u_f,strat)      !BACKGROUND STRATIFICATION
+   !calc_buo= cmplx(0.0,0.0,rp)
+   !calc_buo= calc_buo + buo_adv(u_f,u,in_field,t)            !ADVECTION
+   !calc_buo= calc_buo + buo_diff(in_field,diff)              !DIFFUSION
+   !calc_buo= calc_buo + buo_strat(u_f,strat)      !BACKGROUND STRATIFICATION
+   calc_buo = buo_adv(u_f,u,in_field,t) + buo_diff(in_field,diff)+ buo_strat(u_f,strat)
+
    calc_buo= dealiase_field(calc_buo)
 end function
 !--------------------------------------
@@ -559,10 +563,11 @@ function buo_L(in_field,diff,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_L
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: in_field
   real(kind = rp),intent(in)                                   :: t,diff
+  if(benchmarking ==1) bm_buo_L_starttime=  omp_get_wtime()
   call set_ik_bar(t)
-  buo_L = cmplx(0.0,0.0,rp)
-  buo_L = buo_L + buo_diff(in_field,diff)       !DIFFUSION
+  buo_L =buo_diff(in_field,diff)       !DIFFUSION
   !buo_L = dealiase_field(buo_L)
+  if(benchmarking ==1) bm_buo_L_endtime=  omp_get_wtime()
 end function 
 !--------------------------------------
 function buo_N(u_f,u,in_field,buo,strat,t)
@@ -570,11 +575,14 @@ function buo_N(u_f,u,in_field,buo,strat,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: in_field
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f,u
   real(kind = rp),intent(in)                                   :: t,buo,strat
+  if(benchmarking ==1) bm_buo_N_starttime=  omp_get_wtime()
   call set_ik_bar(t)
-  buo_N = cmplx(0.0,0.0,rp)
-  buo_N = buo_N + buo_adv(u_f,u,in_field,t)        !ADVECTION
-  buo_N = buo_N + buo_strat(u_f,strat)  !BACKGROUND stratification
+  !buo_N = cmplx(0.0,0.0,rp)
+  !buo_N = buo_N + buo_adv(u_f,u,in_field,t)        !ADVECTION
+  !buo_N = buo_N + buo_strat(u_f,strat)  !BACKGROUND stratification
+  buo_N = buo_adv(u_f,u,in_field,t) +  buo_strat(u_f,strat)
   buo_N(0,0) = cmplx(0.0,0.0,rp)                   ! set constant mode to zero
+  if(benchmarking ==1) bm_buo_N_endtime=  omp_get_wtime()
 end function 
 !--------------------------------------
 function buo_adv(u_f,u,in_field,t)
@@ -583,6 +591,7 @@ function buo_adv(u_f,u,in_field,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: in_field
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f,u
   real(kind = rp),intent(in)                                   :: t
+  if(benchmarking ==1) bm_buo_adv_starttime=  omp_get_wtime()
 
   call transform(in_field,state%s_dummy%val,-1,shearing,t)
 
@@ -614,12 +623,14 @@ function buo_adv(u_f,u,in_field,t)
     end do
   !$omp end do
   !$omp end parallel
+  if(benchmarking ==1) bm_buo_adv_endtime=  omp_get_wtime()
 end function
 !--------------------------------------
 function buo_diff(in_field,diff)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: in_field
   real(kind = rp),intent(in)                                   :: diff
+  if(benchmarking ==1) bm_buo_diff_starttime=  omp_get_wtime()
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
@@ -631,12 +642,24 @@ function buo_diff(in_field,diff)
     end do
   !$omp end do
   !$omp end parallel
+  if(benchmarking ==1) bm_buo_diff_endtime=  omp_get_wtime()
 end function
 !--------------------------------------
 function buo_strat(u_f,strat)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: buo_strat
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
   real(kind = rp),intent(in)                                   :: strat
-  buo_strat(:,:)  = -strat*u_f(:,:,2)
+  if(benchmarking ==1) bm_buo_strat_starttime=  omp_get_wtime()
+  !$omp parallel &
+  !$omp private (i)
+  !$omp do
+    do i=0,xdim-1
+      do j=0,ydim-1
+        buo_strat(i,j)  = -strat*u_f(i,j,2)
+      end do
+    end do
+  !$omp end do
+  !$omp end parallel
+  if(benchmarking ==1) bm_buo_strat_endtime=  omp_get_wtime()
 end function
 end module

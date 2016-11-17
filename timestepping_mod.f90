@@ -121,12 +121,13 @@ subroutine IF2_step()
   end if
 
   !$omp parallel &
-  !$omp private (i,j)
+  !$omp private (i)
   !$omp do
-  do i =0,xdim-1
-    do j =0,ydim-1
+  do j =0,ydim-1
+   do i =0,xdim-1
     ! set q-values for exponent, note the minus sign in iki_sqr
-    u_q(i,j,:) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
+    u_q(i,j,1) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
+    u_q(i,j,2) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
     t_q(i,j)   = real(-D_therm*state%iki_bar_sqr%val(i,j),rp)
     c_q(i,j)   = real(-D_comp *state%iki_bar_sqr%val(i,j),rp)
     ! calc exponentials for multiplication

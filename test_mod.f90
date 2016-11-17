@@ -110,7 +110,7 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val =  fu_diff(state%u_f%val,sheartime)
+    state%u_f%val =  fu_L(state%u_f%val,sheartime)
 
     int_dummy_f%val(:,:) =     state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -168,7 +168,7 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft(state%u_f%val,state%temp_f%val,sheartime)
+    state%temp_f%val = calc_buo(state%u_f%val,state%u%val,state%temp_f%val,D_therm,B_therm,S_therm,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -188,7 +188,7 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft_L(state%temp_f%val,sheartime)
+    state%temp_f%val = buo_L(state%temp_f%val,D_therm,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -207,7 +207,7 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft_N(state%u_f%val,state%temp_f%val,sheartime)
+    state%temp_f%val = buo_N(state%u_f%val,state%u%val,state%temp_f%val,B_therm,S_therm,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -226,67 +226,68 @@ module test
                                          b_maxdiv_after
 
     ! reset to init state____________________________________________________________________
-    state = init_dummy 
-    state%temp_f%val = fc(state%u_f%val,state%chem_f%val,sheartime)
+    !state = init_dummy 
+    !state%temp_f%val = fc(state%u_f%val,state%chem_f%val,sheartime)
+    !state%temp_f%val = calc_buo(state%u_f%val,state%u%val,state%_f%val,D_therm,B_therm,S_therm,sheartime)
 
-    int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky%val(:,:)*state%u_f%val(:,:,2) 
-    int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
+    !int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+    !int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
+    !call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    !call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
-    maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
-    b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
+    !maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
+    !b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
 
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc()       output has REGULAR div(u) of :',&
-                                         maxdiv_after
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc()       output has BRUCKER div(u) of :',&
-                                         b_maxdiv_after
-    ! reset to init state____________________________________________________________________
-    state = init_dummy 
-    state%temp_f%val = fc_L(state%chem_f%val,sheartime)
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc()       output has REGULAR div(u) of :',&
+    !                                     maxdiv_after
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc()       output has BRUCKER div(u) of :',&
+    !                                     b_maxdiv_after
+    !! reset to init state____________________________________________________________________
+    !state = init_dummy 
+    !state%temp_f%val = fc_L(state%chem_f%val,sheartime)
 
-    int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky%val(:,:)*state%u_f%val(:,:,2) 
-    int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
+    !int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+    !int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
+    !call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    !call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
-    maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
-    b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
+    !maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
+    !b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
 
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc_L()       output has REGULAR div(u) of :',&
-                                         maxdiv_after
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc_L()       output has BRUCKER div(u) of :',&
-                                         b_maxdiv_after
-    ! reset to init state____________________________________________________________________
-    state = init_dummy 
-    state%temp_f%val = fc_N(state%u_f%val,state%chem_f%val,sheartime)
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc_L()       output has REGULAR div(u) of :',&
+    !                                     maxdiv_after
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc_L()       output has BRUCKER div(u) of :',&
+    !                                     b_maxdiv_after
+    !! reset to init state____________________________________________________________________
+    !state = init_dummy 
+    !state%temp_f%val = fc_N(state%u_f%val,state%chem_f%val,sheartime)
 
-    int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky%val(:,:)*state%u_f%val(:,:,2) 
-    int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
-                              +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
+    !int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+    !int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+    !                          +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
+    !call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    !call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
-    maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
-    b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
+    !maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
+    !b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
 
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc_N()       output has REGULAR div(u) of :',&
-                                         maxdiv_after
-    if(debuglevel.LE.1) write(*,*) '  -div-test: fc_N()       output has BRUCKER div(u) of :',&
-                                         b_maxdiv_after
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc_N()       output has REGULAR div(u) of :',&
+    !                                     maxdiv_after
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: fc_N()       output has BRUCKER div(u) of :',&
+    !                                     b_maxdiv_after
 
-    !-------------------------------------------------------------------
-    if(debuglevel.LE.1) write(*,*) '  -div-test: done.'
-    if(debuglevel.LE.1) write(*,*) '  ________________________________________'
-    ! reset to previous state
+    !!-------------------------------------------------------------------
+    !if(debuglevel.LE.1) write(*,*) '  -div-test: done.'
+    !if(debuglevel.LE.1) write(*,*) '  ________________________________________'
+    !! reset to previous state
     state = init_dummy
  end subroutine
 
