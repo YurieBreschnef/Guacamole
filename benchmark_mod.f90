@@ -21,6 +21,10 @@ real(kind = 8)               :: bm_trafo_starttime
 real(kind = 8)               :: bm_trafo_endtime
 real(kind = 8)               :: bm_trafo_time
 
+real(kind = 8)               :: bm_remap_starttime
+real(kind = 8)               :: bm_remap_endtime
+real(kind = 8)               :: bm_remap_time
+
 real(kind = rp)               :: bm_filewrite_starttime
 real(kind = rp)               :: bm_filewrite_endtime
 real(kind = rp)               :: bm_filewrite_time
@@ -39,6 +43,10 @@ real(kind = rp)               :: bm_dealiase_time
 
 real(kind = rp)               :: bm_fu_starttime
 real(kind = rp)               :: bm_fu_endtime
+
+real(kind = rp)               :: bm_fu_L_starttime
+real(kind = rp)               :: bm_fu_L_endtime
+real(kind = rp)               :: bm_fu_L_time
 
 real(kind = rp)               :: bm_fu_N_starttime
 real(kind = rp)               :: bm_fu_N_endtime
@@ -89,6 +97,26 @@ real(kind = rp)               :: bm_fc_strat_starttime
 real(kind = rp)               :: bm_fc_strat_endtime
 real(kind = rp)               :: bm_fc_strat_time
 
+real(kind = rp)               :: bm_buo_L_starttime
+real(kind = rp)               :: bm_buo_L_endtime
+real(kind = rp)               :: bm_buo_L_time
+
+real(kind = rp)               :: bm_buo_N_starttime
+real(kind = rp)               :: bm_buo_N_endtime
+real(kind = rp)               :: bm_buo_N_time
+
+real(kind = rp)               :: bm_buo_adv_starttime
+real(kind = rp)               :: bm_buo_adv_endtime
+real(kind = rp)               :: bm_buo_adv_time
+
+real(kind = rp)               :: bm_buo_diff_starttime
+real(kind = rp)               :: bm_buo_diff_endtime
+real(kind = rp)               :: bm_buo_diff_time
+
+real(kind = rp)               :: bm_buo_strat_starttime
+real(kind = rp)               :: bm_buo_strat_endtime
+real(kind = rp)               :: bm_buo_strat_time
+
 
 
 real(kind = rp)               :: bm_percent_unaccounted
@@ -97,10 +125,21 @@ contains
 
 subroutine bm_evaluate(write_to_console)
   logical,intent(in)               :: write_to_console
+
+
+
+  bm_buo_L_time     = bm_buo_L_endtime  - bm_buo_L_starttime
+  bm_buo_N_time     = bm_buo_N_endtime - bm_buo_N_starttime
+  bm_buo_adv_time   = bm_buo_adv_endtime -bm_buo_adv_starttime
+  bm_buo_diff_time  = bm_buo_diff_endtime  - bm_buo_diff_starttime
+  bm_buo_strat_time = bm_buo_strat_endtime - bm_buo_strat_starttime
+
   bm_step_time  =         bm_step_endtime-bm_step_starttime
   bm_trafo_time=         bm_trafo_endtime-bm_trafo_starttime
+  bm_remap_time=         bm_remap_endtime-bm_remap_starttime
   bm_fu_time    =         bm_fu_endtime-bm_fu_starttime
   bm_fu_N_time    =         bm_fu_N_endtime-bm_fu_N_starttime
+  bm_fu_L_time    =         bm_fu_L_endtime-bm_fu_L_starttime
   bm_fu_Nuk_time    =     bm_fu_Nuk_endtime-bm_fu_Nuk_starttime
   bm_fu_buo_time    =     bm_fu_buo_endtime-bm_fu_buo_starttime
   bm_fu_diff_time    =     bm_fu_diff_endtime-bm_fu_diff_starttime
@@ -131,40 +170,31 @@ subroutine bm_evaluate(write_to_console)
   write(*,*) '  -statwrite               :  ',bm_statwrite_time          ,'sec,',int(100.0_rp*bm_statwrite_time/bm_step_time),'%'
   write(*,*) '  -filewrite               :  ',bm_filewrite_time,'sec,',int(100.0_rp*bm_filewrite_time/bm_step_time),'%'
   write(*,*) '  -timestepping:           :  ',bm_timestepping_time,'sec,',int(100.0_rp*bm_timestepping_time/bm_step_time),'%'
-  write(*,*) '    -function fu:          :    ',bm_fu_time,'sec,',int(100.0_rp*bm_fu_time/bm_step_time),'%'
+  write(*,*) '_______________________________IF2____________________________________________'
+  write(*,*) '    -function fu_N:        :    ',  bm_fu_N_time,'  sec,',int(100.0_rp*bm_fu_N_time/bm_step_time),'%'
   write(*,*) '       -function fu_Nuk    :      ',bm_fu_Nuk_time,'sec,',int(100.0_rp*bm_fu_Nuk_time/bm_fu_time),'%'
   write(*,*) '       -function fu_buo    :      ',bm_fu_buo_time,'sec,',int(100.0_rp*bm_fu_buo_time/bm_fu_time),'%'
+  write(*,*) '       -function fu_shear  :      ',bm_fu_shear_time,'sec,',int(100.0_rp*bm_fu_shear_time/bm_fu_time),'%'
+  write(*,*) '    -function fu_L:        :    ',  bm_fu_L_time,'  sec,',int(100.0_rp*bm_fu_L_time/bm_step_time)&
+,'%(measured once?!)'
   write(*,*) '       -function fu_diff   :      ',bm_fu_diff_time,'sec,',int(100.0_rp*bm_fu_diff_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_shear  :      ',bm_fu_shear_time,'sec,',int(100.0_rp*bm_fu_shear_time/bm_fu_time),'%'
-
-  write(*,*) '    -function ft:          :    ',bm_ft_time,'sec,',int(100.0_rp*bm_ft_time/bm_step_time),'%'
-  write(*,*) '       -function ft_adv    :      ',bm_ft_adv_time,'sec,',int(100.0_rp*bm_ft_adv_time/bm_ft_time),'%'
-  write(*,*) '       -function ft_diff   :      ',bm_ft_diff_time,'sec,',int(100.0_rp*bm_ft_diff_time/bm_ft_time),'%'
-  write(*,*) '       -function ft_strat  :      ',bm_ft_strat_time,'sec,',int(100.0_rp*bm_ft_strat_time/bm_ft_time),'%'
-
-  write(*,*) '    -function fc:          :    ',bm_fc_time,'sec,',int(100.0_rp*bm_fc_time/bm_step_time),'%'
-  write(*,*) '       -function fc_adv    :      ',bm_fc_adv_time,'sec,',int(100.0_rp*bm_fc_adv_time/bm_fc_time),'%'
-  write(*,*) '       -function fc_diff   :      ',bm_fc_diff_time,'sec,',int(100.0_rp*bm_fc_diff_time/bm_fc_time),'%'
-  write(*,*) '       -function fc_strat  :      ',bm_fc_strat_time,'sec,',int(100.0_rp*bm_fc_strat_time/bm_fc_time),'%'
-  write(*,*) '_______________________________ETD____________________________________________'
-  write(*,*) '    -function fu_N:        :    ',bm_fu_N_time,'sec,',int(100.0_rp*bm_fu_N_time/bm_step_time),'%'
-  write(*,*) '       -function fu_Nuk    :      ',bm_fu_Nuk_time,'sec,',int(100.0_rp*bm_fu_Nuk_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_buo    :      ',bm_fu_buo_time,'sec,',int(100.0_rp*bm_fu_buo_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_shear  :      ',bm_fu_shear_time,'sec,',int(100.0_rp*bm_fu_shear_time/bm_fu_time),'%'
-  write(*,*) '    -function ft_N:        :    ',bm_ft_N_time,'sec,',int(100.0_rp*bm_ft_N_time/bm_step_time),'%'
-  write(*,*) '       -function ft_adv    :      ',bm_ft_adv_time,'sec,',int(100.0_rp*bm_ft_adv_time/bm_ft_time),'%'
-  write(*,*) '       -function ft_strat  :      ',bm_ft_strat_time,'sec,',int(100.0_rp*bm_ft_strat_time/bm_ft_time),'%'
-  write(*,*) '    -function fc_N:        :    ',bm_fc_N_time,'sec,',int(100.0_rp*bm_fc_N_time/bm_step_time),'%'
-  write(*,*) '       -function fc_adv    :      ',bm_fc_adv_time,'sec,',int(100.0_rp*bm_fc_adv_time/bm_fc_time),'%'
-  write(*,*) '       -function fc_strat  :      ',bm_fc_strat_time,'sec,',int(100.0_rp*bm_fc_strat_time/bm_fc_time),'%'
+  write(*,*) '    -function buo_N:       :    ',  bm_buo_N_time,'  sec,',int(100.0_rp*bm_buo_N_time/bm_step_time),'%'
+  write(*,*) '       -function buo_adv   :      ',bm_buo_adv_time,'sec,',int(100.0_rp*bm_ft_adv_time/bm_buo_N_time),'%'
+  write(*,*) '       -function buo_strat :      ',bm_buo_strat_time,'sec,',int(100.0_rp*bm_buo_strat_time/bm_buo_N_time),'%'
+  write(*,*) '    -function buo_L:       :    ',  bm_buo_L_time,'  sec,',int(100.0_rp*bm_buo_L_time/bm_step_time)&
+,'%(measured once?)'
+  write(*,*) '       -function buo_diff  :      ',bm_buo_diff_time,'sec,',int(100.0_rp*bm_buo_diff_time/bm_buo_L_time)&
+,'% (measured once?!)'
   write(*,*) '_______________________________Trafo__________________________________________'
   write(*,*) '    -single trafo          :',bm_trafo_time,'sec,',int(100.0_rp*bm_trafo_time/bm_step_time),'%'
+  write(*,*) '    -remapping             :',bm_remap_time,'sec,',int(100.0_rp*bm_remap_time/bm_step_time),'%'
   write(*,*) 'percent unnacounted        :',1.0_rp - (bm_statwrite_time+bm_filewrite_time+bm_timestepping_time)/bm_step_time,'%'
   write(*,*) '_______________________________Trafo__________________________________________'
   write(*,*) '    -dealiasing            :',bm_dealiase_time,'sec'
   write(*,*) '    -set_ik_bar		 :',bm_set_ik_bar_time,'sec'
   ! note that ft and fc will take the same ammount of computing time
   end if
+ ! call super functions to measure their time to (in IF2 the FU_L and buo_L are not used)
 end subroutine
 
 end module

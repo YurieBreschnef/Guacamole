@@ -28,39 +28,44 @@ module trafo
   !$omp parallel &
   !$omp private (i)
   !$omp do
-    do i=xdim/3,2*(xdim/3)+1
-	  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
-    end do
+     do i=xdim/3,2*(xdim/3)+1
+           dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
+     end do
   !$omp end do
   !$omp end parallel
-
-    do j=ydim/3,2*(ydim/3)+1
-	  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
-    end do	
-
-   if(shearing ==1) then
 
   !$omp parallel &
-  !$omp private (i,j)
+  !$omp private (i)
   !$omp do
-      do i =0,xdim-1 
-        do j =0,ydim-1 
-
-          ! set all modes to zero in brucker space which can not be resolved on the real space grid
-          if((aimag(state%iky_bar%val(i,j)) >= ky_max).OR.(aimag(state%iky_bar%val(i,j)) <=ky_min)) then
-          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
-          end if
-
-          ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
-          if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
-              .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
-          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
-          end if
-        end do
-      end do
+    do j=ydim/3,2*(ydim/3)+1
+           dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
+    end do	
   !$omp end do
   !$omp end parallel
-   end if
+
+   ! this is done in remapping_mod and there is no need to repeat
+   !if(shearing ==1) then
+   !  !$omp parallel &
+   !  !$omp private (j)
+   !  !$omp do
+   !      do j =0,ydim-1 
+   !        do i =0,xdim-1 
+
+   !          ! set all modes to zero in brucker space which can not be resolved on the real space grid
+   !          if((aimag(state%iky_bar%val(i,j)) >= ky_max).OR.(aimag(state%iky_bar%val(i,j)) <=ky_min)) then
+   !          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+   !          end if
+
+   !          ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
+   !          if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
+   !              .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
+   !          dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+   !          end if
+   !        end do
+   !      end do
+   !  !$omp end do
+   !  !$omp end parallel
+   !end if
 
     if(benchmarking ==1) bm_dealiase_endtime=  omp_get_wtime()
 end function
@@ -84,31 +89,26 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
           ! trafo in forward dir:
           ! x-pencils____________________________________________________________
 
-
           !$omp parallel &
           !$omp private (x_pen,x_pen_f,my_thread_id,my_y_start,my_y_end ) shared(out_arr,in_arr)
-              !my_thread_id  = omp_get_thread_num ( )
-              !my_y_start    = my_thread_id*(ydim/threads)
-              !my_y_end      = my_y_start + (ydim/threads)-1
-              !if(my_thread_id==threads-1) my_y_end=my_y_end+mod(ydim,threads)
-            !$omp do
-	          do j=0,ydim-1
-              !write ( *, * ) 'thread',my_thread_id,'transforming xpencil no:',j
-	          	if(debuglevel.GE.3) write(*,*) 'transforming x-pencil number!:', j	
-	          	x_pen = in_arr(:,j)										
-              	call dfftw_execute_dft(x_xf,x_pen,x_pen_f)		
-	          	out_arr(:,j) = x_pen_f/real(xdim,rp)		
-	          ! PHASE FACTOR____________________________________________________________
-	          if(shearing.EQ.1) then
-	            if(debuglevel.GE.3) write(*,*) 'multiplying phase factor'
-	            do i=1,xdim-1			
-	            	!out_arr(i,j) = out_arr(i,j)*exp(imag*shear*t*kxd(i)*(real(j,rp)/real(ydim,rp))*Ly)
-	            	out_arr(i,j) = out_arr(i,j)*exp(shear*time*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-	            	!multiply the fourier spectrum with corresponding phase factor
-	            end do
-	          end if
-	          end do	
-            !$omp end do
+          !$omp do
+	    do j=0,ydim-1
+                !write ( *, * ) 'thread',my_thread_id,'transforming xpencil no:',j
+	      	if(debuglevel.GE.3) write(*,*) 'transforming x-pencil number!:', j	
+	      	x_pen = in_arr(:,j)										
+          	call dfftw_execute_dft(x_xf,x_pen,x_pen_f)		
+	      	out_arr(:,j) = x_pen_f/real(xdim,rp)		
+	      ! PHASE FACTOR____________________________________________________________
+	      if(shearing.EQ.1) then
+	        if(debuglevel.GE.3) write(*,*) 'multiplying phase factor'
+	        do i=1,xdim-1			
+	        	!out_arr(i,j) = out_arr(i,j)*exp(imag*shear*t*kxd(i)*(real(j,rp)/real(ydim,rp))*Ly)
+	        	out_arr(i,j) = out_arr(i,j)*exp(shear*time*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+	        	!multiply the fourier spectrum with corresponding phase factor
+	        end do
+	      end if
+	    end do	
+          !$omp end do
           !$omp end parallel
 	        ! PHASE FACTOR___________________________________________________________
 
@@ -135,26 +135,22 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
           ! y-pencils
           !$omp parallel &
           !$omp private ( y_pen,y_pen_f,my_thread_id,my_x_start,my_x_end ) shared(out_arr,in_arr)
-              my_thread_id  = omp_get_thread_num ( )
-              my_x_start    = my_thread_id*(xdim/threads)
-              my_x_end      = my_x_start + (xdim/threads)-1
-              if(my_thread_id==threads-1) my_x_end=my_x_end+mod(xdim,threads)
-              !$omp do
-	            do i=0,xdim-1
-	            	if(debuglevel.GE.3) write(*,*) 'transforming y-pencil number:', i
-	            	y_pen_f = in_arr(i,:)										
-                	call dfftw_execute_dft(yf_y,y_pen_f, y_pen)						
-	            	out_arr(i,:) = y_pen									
-                ! norm only if dir=1
-	            ! PHASE FACTOR____________________________________________________________
-	            if(shearing.EQ.1) then
-	              if(debuglevel.GE.3) write(*,*) 'multiplying inverse phase factor'
-	              do j=1,ydim-1							
-	                out_arr(i,j) = out_arr(i,j)*exp(-shear*time*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-	                !multiply the fourier spectrum with corresponding inverse phase factor
-	       	      end do	
-	            end if
-	            end do	
+          !$omp do
+	     do i=0,xdim-1
+	        if(debuglevel.GE.3) write(*,*) 'transforming y-pencil number:', i
+	        y_pen_f = in_arr(i,:)										
+            	call dfftw_execute_dft(yf_y,y_pen_f, y_pen)						
+	        out_arr(i,:) = y_pen									
+            ! norm only if dir=1
+	        ! PHASE FACTOR____________________________________________________________
+	        if(shearing.EQ.1) then
+	          if(debuglevel.GE.3) write(*,*) 'multiplying inverse phase factor'
+	          do j=1,ydim-1							
+	            out_arr(i,j) = out_arr(i,j)*exp(-shear*time*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+	            !multiply the fourier spectrum with corresponding inverse phase factor
+	   	  end do	
+	        end if
+	     end do	
           !$omp end do
           !$omp end parallel
 	        ! PHASE FACTOR___________________________________________________________________

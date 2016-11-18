@@ -72,18 +72,25 @@ program guacamole
     end if 
     ! CONSOLE OUTPUT----------------------------------------------------------------------------
   	if((steps>=1000).AND.(mod(state%step,(steps/1000)).EQ.0)) then
-        write(*,*) (state%step/(steps/1000)) ,'permille|step:',main_stp, &
-    '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'T_rm',T_rm
+        write(*,*) ' permille: ',int(state%step/(steps/1000),2),&
+                   '|step:',int(main_stp,2), &
+                   '|t:',real(state%t,4),&
+                   '| dt:',real(dt,4),&
+                   '|shearing:',int(shearing,1),&
+                   '|sheartime:(',real(sheartime,4),'/',real(T_rm,4),&
+                 ') |steptime:',real(bm_timestepping_endtime-bm_timestepping_starttime,4)
     end if
     ! TIMESTEPPING ---------------------------------------------------------------------------
-    if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
+    !if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
+    if(.TRUE.) bm_timestepping_starttime=  omp_get_wtime()
     !call RK4_adjust_dt()
     !call RK4_step()
     !call euler_step()
     call IF2_step()
     !call div_tester()
     main_stp = main_stp +1
-    if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()
+    !if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()
+    if(.TRUE.) bm_timestepping_endtime=  omp_get_wtime()
     ! ----------------------------------------------------------------------------------------
     if(benchmarking ==1) bm_step_endtime=  omp_get_wtime()
     !BENCHMARKING------------------------------------

@@ -3,11 +3,13 @@ module remap
 use const
 use sys_state
 use trafo
+use benchmark
 
 contains
 
 
 subroutine remap_stepwise()
+  if(benchmarking ==1) bm_remap_starttime=  omp_get_wtime()
   call set_ik_bar(sheartime)
   state%u_f%val(:,:,1) =  remap_brucker(state%u_f%val(:,:,1))
   state%u_f%val(:,:,2) =  remap_brucker(state%u_f%val(:,:,2))
@@ -18,6 +20,7 @@ subroutine remap_stepwise()
     sheartime = -T_rm/2.0_rp
     call set_ik_bar(sheartime)
   end if
+  if(benchmarking ==1) bm_remap_endtime=  omp_get_wtime()
 end subroutine
 
 function remap_brucker(in_arr)
