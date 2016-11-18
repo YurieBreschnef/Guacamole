@@ -233,6 +233,7 @@ do for [i=0:no_of_img] {
     set cbrange[min_spec_order:max_spec_order]
   	set title 'fourier spectrum of chem field'
    	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
+
     #unset parametric
     #set mapping cartesian
     #set view 60,30,1,1
@@ -241,7 +242,7 @@ do for [i=0:no_of_img] {
     #set hidden3d
    	#splot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
 
-		unset multiplot
+     unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
     set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
