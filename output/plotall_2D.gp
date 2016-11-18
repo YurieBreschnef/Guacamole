@@ -3,8 +3,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 1.0*3.14159 
-Ly = 1.0*3.14159  
+Lx = 2.0*3.14159 
+Ly = 2.0*3.14159  
 xdim = 128 
 ydim = 128 
 
@@ -84,7 +84,7 @@ no_of_img = 299
         plot './data/u_stat/u_stat.dat' using 2:15 with lines lw 3 title "v_{rms}"   ,\
              './data/u_stat/u_stat.dat' using 2:16 with lines lw 3 title "std-dev v"   ,\
              './data/u_stat/u_stat.dat' using 2:17 with lines lw 3 title "variance v"  
-        set title 'simulation time [arb] vs. E_kin [arb]'
+        set title 'simulation time [arb] vs. log(E_kin [arb])'
         plot './data/E_stat/E_stat.dat' using 2:(log($3)) with lines lw 3 title "log(E_{kin})"   ,\
              './data/E_stat/E_stat.dat' using 2:(log($4)) with lines lw 3 title "log(E_{pot})"   ,\
              './data/E_stat/E_stat.dat' using 2:(log($5)) with lines lw 3 title "log(E_{tot})"  
@@ -131,7 +131,7 @@ no_of_img = 299
     ##########################################################################
 
 
-do for [i=0:no_of_img] {
+do for [i=57:no_of_img] {
     set xrange [0:Lx]
     set yrange [0:Ly]
     set size ratio aspect_ratio 
