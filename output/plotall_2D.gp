@@ -3,10 +3,10 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 2.0*3.14159 
-Ly = 2.0*3.14159  
-xdim = 128 
-ydim = 128 
+Lx = 4.0*3.14159 
+Ly = 4.0*3.14159  
+xdim = 384 
+ydim = 384 
 
 
 max_spec_order = 0
@@ -131,7 +131,7 @@ no_of_img = 299
     ##########################################################################
 
 
-do for [i=57:no_of_img] {
+do for [i=0:no_of_img] {
     set xrange [0:Lx]
     set yrange [0:Ly]
     set size ratio aspect_ratio 

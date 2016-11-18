@@ -32,7 +32,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	integer(kind = ip)				:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter			      :: tmax                      = 100.0_rp
-	real(kind = rp)					      :: dt			   = 5.0e-4_rp
+	real(kind = rp)					      :: dt			   = 1.0e-2_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -60,11 +60,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp),parameter			      :: b_2=   1.0_rp
 
         !shear related parameters
-<<<<<<< HEAD
-	real(kind = rp)               :: shear    = 0.05_rp
-=======
 	real(kind = rp)               :: shear    = 0.050_rp
->>>>>>> buo_fixed
         integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
@@ -74,7 +70,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	real(kind = rp)					      :: kx_max 
 	real(kind = rp)					      :: kx_min
   
-  integer(kind = ip)            :: benchmarking = 0
+  integer(kind = ip)            :: benchmarking = 1
 
   integer(kind = ip)             :: remapping = 1
   integer(kind = ip)             :: remapping_rate = 10 

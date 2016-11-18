@@ -114,7 +114,8 @@ use const
     l = benchmarking
     benchmarking =1
     state_np1 = state  
-    call RK4_step()   ! to not compare the first writing step  with the second nonwriting
+    !call RK4_step()   ! to not compare the first writing step  with the second nonwriting
+    call IF2_step()   ! to not compare the first writing step  with the second nonwriting
 
     !-----RK4-----------------------------------------------------------------------------------
     !call cpu_time(bm_timestepping_starttime)
