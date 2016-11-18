@@ -32,7 +32,7 @@ integer,parameter				::ip			= 4			!integer-precision
 	integer(kind = ip)				:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter			      :: tmax                      = 100.00_rp
-	real(kind = rp)					      :: dt			   = 1.0e-4_rp
+	real(kind = rp)					      :: dt			   = 5.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
