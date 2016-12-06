@@ -16,10 +16,14 @@ module IO_mod
     call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
     call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
     call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
+
+    ! ESSENTIAL
     call write_u()
-    call write_abs_u()
-    call write_chem()
     call write_temp()
+    call write_chem()
+
+    ! OPTIONAL 
+    call write_abs_u()
     call write_buo()
     call write_div()
     call write_vort()
@@ -29,13 +33,50 @@ module IO_mod
     call write_chem_f_remap()
     call write_temp_f()
     call write_temp_f_remap()
+
+    !STATISTICS
     call write_u_stat()     ! u-relatetd measures
     call write_fu_stat()    ! pdgl-relatetd measures (influences of terms)
     call write_E_stat()     ! Energy related measures
     call write_T_stat()     ! Energy related measures
     call write_C_stat()     ! Energy related measures
     call write_sys_stat()   ! System wide measures
+
     !if(debuglevel <= 2) write(*,*) '-done with write_all.'
+  end subroutine
+  subroutine plot_all(sindex,eindex,maxspec,minspec)
+    integer		::sindex,eindex
+    real        	::maxspec,minspec
+    !------------------------------------------
+    character(len=1000)  :: command
+    character(len=100)  :: x_dim,L_x
+    character(len=100)  :: y_dim,L_y
+    character(len=100)  :: aspect
+    character(len=100)  :: start_index,end_index
+    character(len=100)  :: max_spec,min_spec
+
+    write(x_dim,*)   xdim
+    write(y_dim,*)   ydim
+    write(L_x,*)   Lx
+    write(L_y,*)   Ly
+    write(aspect,*)   int(Ly/Lx)
+    write(start_index,*)  sindex 
+    write(end_index,*)  eindex 
+    write(max_spec,*) maxspec 
+    write(min_spec,*) minspec 
+
+    command =  'bash ./output/plot_all.sh'//' '&
+                      //trim(adjustl(x_dim))//' '&
+                      //trim(adjustl(y_dim))//' '&
+                      //trim(adjustl(L_x))//' '&
+                      //trim(adjustl(L_y))//' '&
+                      //trim(adjustl(aspect))//' '&
+                      //trim(adjustl(start_index))//' '&
+                      //trim(adjustl(end_index))//' '&
+                      //trim(adjustl(max_spec))//' '&
+                      //trim(adjustl(min_spec))	
+write(*,*) 'command: ' , command
+ call system(command)
   end subroutine
   subroutine write_vort()
     !write chemical field to file. Note the path variable specifying the destination
@@ -546,7 +587,6 @@ module IO_mod
     vdummy%val = fu_shear(state%u_f%val,sheartime)
     fu_shear_dummy%val = cmplx(sqrt(real(vdummy%val(:,:,1),rp)**2+(real(vdummy%val(:,:,2),rp)**2)),0.0_rp)
     fu_shear_stats= measure_sfield_stats(fu_shear_dummy)
-
 
 		write(suffix,"(A11)") "fu_stat.dat"
     suffix = trim(adjustl(suffix))

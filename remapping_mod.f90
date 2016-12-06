@@ -6,7 +6,6 @@ use benchmark
 
 contains
 
-
 subroutine remap_stepwise()
   if(benchmarking ==1) bm_remap_starttime=  omp_get_wtime()
   call set_ik_bar(sheartime)
@@ -29,7 +28,7 @@ function remap_brucker(in_arr)
     if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
     write(*,*) '---sheartime reached---'
 
-   ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
+    ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
     call surgery(remap_brucker) 
     !do i =0,xdim-1 
     !  do j =0,ydim-1 
@@ -101,8 +100,8 @@ subroutine surgery(patient)
       !  end do
       !end do
 end subroutine
-
 end module
+
    ! ! TODO: inefficient, since all transforms are conducted, only one dir necessary
    ! call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,T_rm/2.0_rp)
    ! call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,T_rm/2.0_rp)

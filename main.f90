@@ -15,7 +15,9 @@ program guacamole
  !  You should have received a copy of the GNU General Public License
  !  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  !----------------------------------------------------------------------------------------
- ! main program , the main timestepping loop is implemented here, calling the actual
+ ! guacamole : simulation double diffusive convection with homogeneous background shear
+ !
+ ! main program: the main timestepping loop is implemented here, calling the actual
  ! stepping routines in the timestepping_mod, and writing to files by calling write_all()
  ! from IO_module.
  ! periodic measures are taken according to parameter: measure_every in const_mod
@@ -62,16 +64,17 @@ program guacamole
     if(state%t > last_written) then
       if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
       call write_all()
+      call plot_all(int(state%t/write_intervall)-1,int(state%t/write_intervall)-1,1.0,-25.0)
       last_written = last_written+write_intervall
       if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
       ! check for NAN's occasionally (recourse intensive):
       IF(ANY(IsNaN(real(state%u_f%val))))  then
-        write(*,*) 'func crossp(): NAN detected in output array'
+        write(*,*) 'main: after write_all(): NAN detected in u_f array'
         stop
       end if
     end if 
     ! CONSOLE OUTPUT----------------------------------------------------------------------------
-  	if((steps>=1000).AND.(mod(state%step,(steps/1000)).EQ.0)) then
+    if((steps>=1000).AND.(mod(state%step,(steps/1000)).EQ.0)) then
         write(*,*) ' permille: ',int(state%step/(steps/1000),2),&
                    '|step:',int(main_stp,2), &
                    '|t:',real(state%t,4),&
@@ -81,7 +84,6 @@ program guacamole
                  ') |steptime:',real(bm_timestepping_endtime-bm_timestepping_starttime,4)
     end if
     ! TIMESTEPPING ---------------------------------------------------------------------------
-    !if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
     if(.TRUE.) bm_timestepping_starttime=  omp_get_wtime()
     !call RK4_adjust_dt()
     !call RK4_step()
@@ -89,7 +91,6 @@ program guacamole
     call IF2_step()
     !call div_tester()
     main_stp = main_stp +1
-    !if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()
     if(.TRUE.) bm_timestepping_endtime=  omp_get_wtime()
     ! ----------------------------------------------------------------------------------------
     if(benchmarking ==1) bm_step_endtime=  omp_get_wtime()
