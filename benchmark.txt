@@ -1,0 +1,136 @@
+
+______________________________BENCHMARK:_______________________________________
+ total step:                :   5.4265245620044880      sec,
+   -statwrite               :     5.9953890740871429E-008 sec,           0 %
+   -filewrite               :     4.4994521886110306E-008 sec,           0 %
+   -timestepping:           :     5.4265240409877151      sec,          99 %
+     -function fu:          :       2.0876707020215690      sec,          38 %
+        -function fu_Nuk    :        0.10777442803373560      sec,           5 %
+        -function fu_buo    :         2.1812494029290974E-002 sec,           1 %
+        -function fu_diff   :         1.7855022044386715E-002 sec,           0 %
+        -function fu_shear  :         2.1491299849003553E-003 sec,           0 %
+     -function ft:          :       1.0696481430204585      sec,          19 %
+        -function ft_adv    :        0.10427049902500585      sec,           9 %
+        -function ft_diff   :         7.6090669608674943E-003 sec,           0 %
+        -function ft_strat  :         2.2891610278747976E-003 sec,           0 %
+     -function fc:          :       1.0711295810178854      sec,          19 %
+        -function fc_adv    :        0.10510390001581982      sec,           9 %
+        -function fc_diff   :         7.4939490295946598E-003 sec,           0 %
+        -function fc_strat  :         2.2761599975638092E-003 sec,           0 %
+ _______________________________ETD____________________________________________
+     -function fu_N:        :       2.1434631660231389      sec,          39 %
+        -function fu_Nuk    :        0.10777442803373560      sec,           5 %
+        -function fu_buo    :         2.1812494029290974E-002 sec,           1 %
+        -function fu_shear  :         2.1491299849003553E-003 sec,           0 %
+     -function ft_N:        :      0.11156541196396574      sec,           2 %
+        -function ft_adv    :        0.10427049902500585      sec,           9 %
+        -function ft_strat  :         2.2891610278747976E-003 sec,           0 %
+     -function fc_N:        :      0.11233844404341653      sec,           2 %
+        -function fc_adv    :        0.10510390001581982      sec,           9 %
+        -function fc_strat  :         2.2761599975638092E-003 sec,           0 %
+ _______________________________Trafo__________________________________________
+     -single trafo          :   9.6170040196739137E-003 sec,           0 %
+ percent unnacounted        :   7.6673081550460154E-008 %
+
+
+ ______________________________BENCHMARK:_______________________________________
+ total step:                :   4.8498969799838960      sec,
+   -statwrite               :     1.6199192032217979E-007 sec,           0 %
+   -filewrite               :     3.6030542105436325E-008 sec,           0 %
+   -timestepping:           :     4.8498960660072044      sec,          99 %
+     -function fu:          :       2.0923422260093503      sec,          43 %
+        -function fu_Nuk    :        0.10258675902150571      sec,           4 %
+        -function fu_buo    :         2.0958609995432198E-002 sec,           1 %
+        -function fu_diff   :         1.7367882013786584E-002 sec,           0 %
+        -function fu_shear  :         2.1438340190798044E-003 sec,           0 %
+     -function ft:          :       1.0850579080288298      sec,          22 %
+        -function ft_adv    :         9.2876539973076433E-002 sec,           8 %
+        -function ft_diff   :         7.8339260071516037E-003 sec,           0 %
+        -function ft_strat  :         2.0928180310875177E-003 sec,           0 %
+     -function fc:          :       1.0966141039971262      sec,          22 %
+        -function fc_adv    :         9.5279206987470388E-002 sec,           8 %
+        -function fc_diff   :         7.1528340340591967E-003 sec,           0 %
+        -function fc_strat  :         2.6185230235569179E-003 sec,           0 %
+ _______________________________ETD____________________________________________
+     -function fu_N:        :       2.0537709100171924      sec,          42 %
+        -function fu_Nuk    :        0.10258675902150571      sec,           4 %
+        -function fu_buo    :         2.0958609995432198E-002 sec,           1 %
+        -function fu_shear  :         2.1438340190798044E-003 sec,           0 %
+     -function ft_N:        :       9.9596582003869116E-002 sec,           2 %
+        -function ft_adv    :         9.2876539973076433E-002 sec,           8 %
+        -function ft_strat  :         2.0928180310875177E-003 sec,           0 %
+     -function fc_N:        :      0.10470970498863608      sec,           2 %
+        -function fc_adv    :         9.5279206987470388E-002 sec,           8 %
+        -function fc_strat  :         2.6185230235569179E-003 sec,           0 %
+ _______________________________Trafo__________________________________________
+     -single trafo          :   1.0221189004369080E-002 sec,           0 %
+ percent unnacounted        :   1.4762256439482258E-007 %
+ ______________________________BENCHMARK:_______________________________________
+ total step:                :   4.7916008079773746      sec,
+   -statwrite               :     1.5099067240953445E-007 sec,           0 %
+   -filewrite               :     3.8999132812023163E-008 sec,           0 %
+   -timestepping:           :     4.7916001859703101      sec,          99 %
+     -function fu:          :       2.0923422260093503      sec,          43 %
+        -function fu_Nuk    :        0.10322568396804854      sec,           4 %
+        -function fu_buo    :         2.1047568996436894E-002 sec,           1 %
+        -function fu_diff   :         1.7367882013786584E-002 sec,           0 %
+        -function fu_shear  :         2.1438340190798044E-003 sec,           0 %
+     -function ft:          :       1.0850579080288298      sec,          22 %
+        -function ft_adv    :         9.2346413992345333E-002 sec,           8 %
+        -function ft_diff   :         7.8339260071516037E-003 sec,           0 %
+        -function ft_strat  :         2.0405600080266595E-003 sec,           0 %
+     -function fc:          :       1.0966141039971262      sec,          22 %
+        -function fc_adv    :         9.1396714968141168E-002 sec,           8 %
+        -function fc_diff   :         7.1528340340591967E-003 sec,           0 %
+        -function fc_strat  :         2.1333699696697295E-003 sec,           0 %
+ _______________________________ETD____________________________________________
+     -function fu_N:        :       2.0546610080054961      sec,          42 %
+        -function fu_Nuk    :        0.10322568396804854      sec,           4 %
+        -function fu_buo    :         2.1047568996436894E-002 sec,           1 %
+        -function fu_shear  :         2.1438340190798044E-003 sec,           0 %
+     -function ft_N:        :       9.8691948980558664E-002 sec,           2 %
+        -function ft_adv    :         9.2346413992345333E-002 sec,           8 %
+        -function ft_strat  :         2.0405600080266595E-003 sec,           0 %
+     -function fc_N:        :       9.7856050007976592E-002 sec,           2 %
+        -function fc_adv    :         9.1396714968141168E-002 sec,           8 %
+        -function fc_strat  :         2.1333699696697295E-003 sec,           0 %
+ _______________________________Trafo__________________________________________
+     -single trafo          :   8.9203769457526505E-003 sec,           0 %
+ percent unnacounted        :   9.0161362931162614E-008 %
+
+______________________________BENCHMARK:_______________________________________
+ total step:                :   3.2859207719448023      sec,
+   -statwrite               :     1.3597309589385986E-007 sec,           0 %
+   -filewrite               :     3.8999132812023163E-008 sec,           0 %
+   -timestepping:           :     3.2859200150123797      sec,          99 %
+     -function fu:          :       1.3115602440084331      sec,          39 %
+        -function fu_Nuk    :        0.10601857001893222      sec,           8 %
+        -function fu_buo    :         2.1051603020168841E-002 sec,           1 %
+        -function fu_diff   :         3.0575784971006215E-002 sec,           2 %
+        -function fu_shear  :         2.0817049662582576E-003 sec,           0 %
+     -function ft:          :      0.71789575100410730      sec,          21 %
+        -function ft_adv    :        0.10501847002888098      sec,          14 %
+        -function ft_diff   :         1.6432517964858562E-002 sec,           2 %
+        -function ft_strat  :         2.0409839926287532E-003 sec,           0 %
+     -function fc:          :      0.71842483902582899      sec,          21 %
+        -function fc_adv    :        0.10347280895803124      sec,          14 %
+        -function fc_diff   :         1.7681775032542646E-002 sec,           2 %
+        -function fc_strat  :         2.1123060141690075E-003 sec,           0 %
+ _______________________________ETD____________________________________________
+     -function fu_N:        :       1.2687094309949316      sec,          38 %
+        -function fu_Nuk    :        0.10601857001893222      sec,           8 %
+        -function fu_buo    :         2.1051603020168841E-002 sec,           1 %
+        -function fu_shear  :         2.0817049662582576E-003 sec,           0 %
+     -function ft_N:        :      0.11162850703112781      sec,           3 %
+        -function ft_adv    :        0.10501847002888098      sec,          14 %
+        -function ft_strat  :         2.0409839926287532E-003 sec,           0 %
+     -function fc_N:        :      0.11028813797747716      sec,           3 %
+        -function fc_adv    :        0.10347280895803124      sec,          14 %
+        -function fc_strat  :         2.1123060141690075E-003 sec,           0 %
+ _______________________________Trafo__________________________________________
+     -single trafo          :   7.2918880032375455E-003 sec,           0 %
+ percent unnacounted        :   1.7710718980268325E-007 %
+
+
+
+

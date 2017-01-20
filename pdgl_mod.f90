@@ -79,8 +79,8 @@ function fu_N(u_f,u,temp_f,chem_f,t)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-  do i = 0,xdim-1
-    do j = 0,ydim-1
+  do j = 0,ydim-1
+    do i = 0,xdim-1
       fu_N(i,j,:) = fu_N(i,j,:) +fu_dummy(i,j,:) 
     end do
   end do
@@ -110,8 +110,8 @@ function fu_shear(u_f,t)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
           if (.NOT.((i==0).AND.(j==0))) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
@@ -143,8 +143,8 @@ function fu_diff(u_f,t)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
         fu_diff(i,j,1) = D_visc*(state%iki_bar_sqr%val(i,j))*u_f(i,j,1)
         fu_diff(i,j,2) = D_visc*(state%iki_bar_sqr%val(i,j))*u_f(i,j,2)
         !note minus sign intrinsic in (i*k)**2
@@ -598,8 +598,8 @@ function buo_adv(u_f,u,in_field,t)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
       !                                            buo* u          (realspace)
       state%dummy%val(i,j,1) = state%s_dummy%val(i,j)*u(i,j,1)
       state%dummy%val(i,j,2) = state%s_dummy%val(i,j)*u(i,j,2)
@@ -614,8 +614,8 @@ function buo_adv(u_f,u,in_field,t)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
       ! advection 
       buo_adv(i,j) =-( state%ikx_bar%val(i,j) * state%dummy_f%val(i,j,1)  &  
                      +state%iky_bar%val(i,j) * state%dummy_f%val(i,j,2) )
@@ -634,8 +634,8 @@ function buo_diff(in_field,diff)
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
         buo_diff(i,j)  = diff*( state%iki_bar_sqr%val(i,j)*in_field(i,j))
         !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
       end do
@@ -653,8 +653,8 @@ function buo_strat(u_f,strat)
   !$omp parallel &
   !$omp private (i)
   !$omp do
-    do i=0,xdim-1
-      do j=0,ydim-1
+    do j=0,ydim-1
+      do i=0,xdim-1
         buo_strat(i,j)  = -strat*u_f(i,j,2)
       end do
     end do

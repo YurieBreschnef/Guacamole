@@ -3,10 +3,10 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 4.0*3.14159 
-Ly = 4.0*3.14159  
-xdim = 384 
-ydim = 384 
+Lx = 8.0*3.14159 
+Ly = 8.0*3.14159  
+xdim = 256 
+ydim = 256 
 
 
 max_spec_order = 0
@@ -98,6 +98,10 @@ no_of_img = 299
         plot './data/sys_stat/sys_stat.dat' using 2:5 with lines lw 3 title "dt [arb]"
         set title 'simulation time vs. average vorticity [arb] '
         plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
+        set title 'simulation time vs. average divergence [arb] '
+        plot './data/sys_stat/sys_stat.dat' using 2:6 title "max brucker div [arb]" # ,\
+ #            './data/sys_stat/sys_stat.dat' using 2:3 title "max div [arb]"
+
 
     unset multiplot
     ##########################################################################
@@ -168,7 +172,7 @@ do for [i=0:no_of_img] {
 
     #MULTIPLOT FOR DIVERGENCE
 
-    set terminal pngcairo size 600,400 enhanced font 'Verdana,10'
+    set terminal pngcairo size 800,400 enhanced font 'Verdana,10'
   	set output './visual/div/'.i.'.png'
 		set multiplot layout 1,2
   	set title 'real part of div (u) (real space)'
@@ -181,10 +185,16 @@ do for [i=0:no_of_img] {
     # Multiplot for better visibility:-----------------------------------
     
     set size ratio aspect_ratio 
-    set terminal pngcairo size 1600,800 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1600,800 enhanced font 'Verdana,30'
     set output './visual/combo/'.i.'.png'
 
-		set multiplot layout 2,4
+    set lmargin 4
+    set rmargin 1
+    set tmargin 2 
+    set bmargin 2
+    set cbrange [-1.0:1.0]
+
+    set multiplot layout 1,2
     # Axes
     set style line 11 lc rgb '#808080' lt 1
     set border 3 back ls 11
@@ -193,45 +203,16 @@ do for [i=0:no_of_img] {
     set xrange [0:Lx]
     set yrange [0:Ly]
 
-   #set cbrange [-300.0:300.0]
-		set title 'temperature field'
-      	plot './data/temp/'.i.'.temp.dat' using 1:2:3  with image notitle
-    #load './gnuplot-palettes-master/Greys.pal'    
-   #set cbrange [-30.0:30.0]
-		set title 'chemical field'
+		set title 'chemical [arb]'
       	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image notitle
-    #load './gnuplot-palettes-master/jet.pal'    
-   # unset cbrange
-
-    #set cbrange [-0.0:5.0]
-		set title 'absolute of u '
-     	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3  with image notitle
-    #unset cbrange
-
-    #set cbrange [-0.8:0.8]
-		set title 'z component of u '
-      	plot './data/u/'.i.'.u.dat' using 1:2:4  with image notitle
-    #unset cbrange
-
-    #set cbrange [-0.05:0.05]
-		set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
-     	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image notitle
-    #unset cbrange
-
-		set title 'velocity field'
-     	plot './data/u/'.i.'.u.dat' using 1:2:3:4  with vectors
-
-		set title 'vorticity field'
-     	plot './data/vort/'.i.'.vort.dat' using 1:2:3  with image notitle
-
-
-#		set title 'real part of div (u)'
-#      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image notitle
-
     unset xrange 
     unset yrange 
+    unset cbrange
+    set lmargin 5
+    set xrange [0:xdim]
+    set yrange [0:ydim]
     set cbrange[min_spec_order:max_spec_order]
-  	set title 'fourier spectrum of chem field'
+  	set title 'logarithm of Brucker spectrum'
    	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
 
     #unset parametric
@@ -242,6 +223,7 @@ do for [i=0:no_of_img] {
     #set hidden3d
    	#splot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
 
+     unset margin
      unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------

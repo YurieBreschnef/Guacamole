@@ -22,10 +22,10 @@ subroutine remap_stepwise()
 end subroutine
 
 function remap_brucker(in_arr)
-  	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: in_arr,remap_brucker
+    complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: in_arr,remap_brucker
     !remap_brucker = dealiase_field(in_arr)
     remap_brucker = in_arr
-    if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
+  if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
     write(*,*) '---sheartime reached---'
 
     ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
@@ -74,7 +74,7 @@ function remap_brucker(in_arr)
       ! set all modes to zero in brucker space which can not be resolved on the real space grid
       remap_brucker = in_arr
       call surgery(remap_brucker)
-    end if
+  end if
 end function
 
 

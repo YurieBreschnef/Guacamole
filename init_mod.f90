@@ -367,7 +367,6 @@ use const
       write(*,*) 'ERROR: init_mod  malfunciton in determination of ky_max,ky_min (important for remapping)'
       write(*,*) 'ky_max:',ky_max,'state%iky%val(0,ydim/2)',state%iky%val(0,ydim/2)
       write(*,*) 'ky_min:',ky_min,'state%iky%val(0,ydim/2+1)',state%iky%val(0,ydim/2+1)
-      
       stop
     end if
 

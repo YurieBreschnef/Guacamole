@@ -126,8 +126,7 @@ subroutine IF2_step()
   do j =0,ydim-1
    do i =0,xdim-1
     ! set q-values for exponent, note the minus sign in iki_sqr
-    u_q(i,j,1) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
-    u_q(i,j,2) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
+    u_q(i,j,:) = real(-D_visc *state%iki_bar_sqr%val(i,j),rp)
     t_q(i,j)   = real(-D_therm*state%iki_bar_sqr%val(i,j),rp)
     c_q(i,j)   = real(-D_comp *state%iki_bar_sqr%val(i,j),rp)
     ! calc exponentials for multiplication
@@ -160,8 +159,8 @@ subroutine IF2_step()
   !$omp parallel &
   !$omp private (i,j)
   !$omp do
-  do i =0,xdim-1
-    do j =0,ydim-1
+  do j =0,ydim-1
+    do i =0,xdim-1
         !k1 dummy arrays now hold(field * exp(qh) + u_RHS_n+dt)
 	state%u_k1%val(i,j,:) = state%u_k1%val(i,j,:)   +dt*u_RHS_n(i,j,:)
 	state%t_k1%val(i,j)   = state%temp_f%val(i,j)   +dt*t_RHS_n(i,j)
@@ -194,16 +193,16 @@ subroutine IF2_step()
   !$omp parallel &
   !$omp private (i)
   !$omp do
-  do i =0,xdim-1
-    do j =0,ydim-1
-    state%u_f%val(i,j,:)   =state%u_f%val(i,j,:)  *u_exp_mqh(i,j,:) + dt_2*(u_RHS_n(i,j,:)*u_exp_mqh(i,j,:) + u_RHS_np1(i,j,:))
-    state%temp_f%val(i,j)  =state%temp_f%val(i,j) *t_exp_mqh(i,j)   + dt_2*(t_RHS_n(i,j)  *t_exp_mqh(i,j)   + t_RHS_np1(i,j))
-    state%chem_f%val(i,j)  =state%chem_f%val(i,j) *c_exp_mqh(i,j)   + dt_2*(c_RHS_n(i,j)  *c_exp_mqh(i,j)   + c_RHS_np1(i,j))
+  do j =0,ydim-1
+    do i =0,xdim-1
+    state%u_f%val(i,j,:)   =state%u_f%val(i,j,:) *u_exp_mqh(i,j,:) + dt_2*(u_RHS_n(i,j,:)*u_exp_mqh(i,j,:) + u_RHS_np1(i,j,:))
+    state%temp_f%val(i,j)  =state%temp_f%val(i,j)*t_exp_mqh(i,j)   + dt_2*(t_RHS_n(i,j)  *t_exp_mqh(i,j)   + t_RHS_np1(i,j))
+    state%chem_f%val(i,j)  =state%chem_f%val(i,j)*c_exp_mqh(i,j)   + dt_2*(c_RHS_n(i,j)  *c_exp_mqh(i,j)   + c_RHS_np1(i,j))
     end do
   end do
   !$omp end do
   !$omp end parallel
-  call dealiase_all()
+ ! call dealiase_all()
   sheartime = sheartime+dt
   call set_ik_bar(sheartime)
   state%t           = state%t     +dt

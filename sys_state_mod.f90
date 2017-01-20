@@ -171,8 +171,8 @@ contains
     real(kind=real_outp_precision)            ::measure_u_rms
     real(kind=rp)                             ::u_rms
     u_rms= 0.0_rp
-    do i=0,xdim-1
     do j=0,ydim-1
+    do i=0,xdim-1
     do k=1,2
       u_rms= u_rms+(state%u%val(i,j,1)**2 + state%u%val(i,j,2)**2)
     end do
@@ -195,14 +195,23 @@ contains
      !end if
 
     if(shearing ==1) then
-      state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-      state%iky_bar%val(:,:) = state%iky%val(:,:)-shear*ktime*state%ikx%val(:,:)
+      !$omp parallel &
+      !$omp private (i,j)
+      !$omp do
+        do j=0,ydim-1
+          do i=0,xdim-1
+          state%ikx_bar%val(i,j) = state%ikx%val(i,j) 
+          state%iky_bar%val(i,j) = state%iky%val(i,j)-shear*ktime*state%ikx%val(i,j)
 
-      state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
-      state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
-      state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
-      state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
-      state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
+          state%ikx_bar_sqr%val(i,j) = state%ikx_bar%val(i,j)**2
+          state%iky_bar_sqr%val(i,j) = state%iky_bar%val(i,j)**2
+          state%iki_bar_sqr%val(i,j) = state%ikx_bar%val(i,j)**2 + state%iky_bar%val(i,j)**2
+          state%k_vec%val(i,j,1) = real(imag*state%ikx_bar%val(i,j),rp)
+          state%k_vec%val(i,j,2) = real(imag*state%iky_bar%val(i,j),rp)
+          end do
+        end do
+      !$omp end do
+      !$omp end parallel
     end if
 
   end subroutine
